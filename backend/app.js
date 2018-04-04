@@ -1,10 +1,10 @@
-var express = require('express');
-var app = express();
-var db = require('./db');
+const express = require('express');
+const app = express();
+const db = require('./db');
 
-var UserController = require('./user/UserController');
+const UserController = require('./user/UserController');
 const MatchController = require('./match/MatchController.js');
-app.use('/users', UserController);
-app.use('/api/match', MatchController);
+app.use('/api/users', UserController);
+app.use('/api/matches', MatchController);
 
 module.exports = app;

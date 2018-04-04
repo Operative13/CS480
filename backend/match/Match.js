@@ -1,5 +1,5 @@
-var mongoose = require('mongoose');  
-var MatchSchema = new mongoose.Schema({
+const mongoose = require('mongoose');  
+const MatchSchema = new mongoose.Schema({
   name: String,
   // list of Strings which are their _id in User collection
   players: [String],
