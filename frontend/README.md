@@ -1,3 +1,36 @@
+# CS480/frontend
+
+React Native app that serves as our front end
+
+## Requires (for Development)
+
+[nodejs](https://nodejs.org/en/)
+
+## Install
+ 
+```
+$ git clone git@github.com:Operative13/CS480.git
+$ cd CS480/frontend
+$ npm i
+```
+
+## Run
+
+From frontend directory
+
+```
+$ npm start
+```
+
+## Dev Tools
+
+| Program | Purpose |
+| --- | --- |
+| Webstorm | IDE |
+| Expo | Phone app for viewing & testing a react-native app while developing |
+
+---
+
 This project was bootstrapped with [Create React Native App](https://github.com/react-community/create-react-native-app).
 
 Below you'll find information about performing common tasks. The most recent version of this guide is available [here](https://github.com/react-community/create-react-native-app/blob/master/react-native-scripts/template/README.md).

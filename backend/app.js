@@ -3,8 +3,8 @@ const app = express();
 const db = require('./db');
 
 const UserController = require('./user/UserController');
-const MatchController = require('./match/MatchController.js');
+const GameController = require('./match/GameController.js');
 app.use('/api/users', UserController);
-app.use('/api/matches', MatchController);
+app.use('/api/games', GameController);
 
 module.exports = app;

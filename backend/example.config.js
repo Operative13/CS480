@@ -4,7 +4,7 @@
  * MongoDB on the cloud
  * make copy of this file then rename to config.js
  */
-let config = {
+const config = {
   dbUser: 'user',
   dbPassword: 'pw',
   partialMongoDbUri: '123.mlab.com:port11/dbName',

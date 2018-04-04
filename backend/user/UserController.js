@@ -21,19 +21,27 @@ router.get('/', function (req, res) {
  * Create user in db.users
  * Request body should contain:
  * username, password
+ * Optional in request body:
+ * email
  */
 router.post('/', function (req, res) {
-  User.create({
-    username : req.body.username,
-    email : req.body.email,
-    password : bcrypt.hashSync(req.body.password, 10)
-  },
-  function (err, user) {
-      if (err) return res.status(500).send("There was a problem adding the information to the database.");
+  // bcrypt.genSalt(10, (err, salt) => {
+  // if (err) return res.status(500).send("bcrypt genSalt is bad");
+  console.log(req.body.password);
+  bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
+    if (err) return res.status(500).send("bcrypt screwed up");
 
-      res.status(200).send(user);
-    }
-  );
+    User.create({
+        username: req.body.username,
+        email: req.body.email,
+        password: hashedPassword,
+      },
+      function (err, user) {
+        if (err) return res.status(500).send(err.message);
+        res.status(200).send(user);
+      }
+    );
+  });
 });
 
 /**
