@@ -48,14 +48,15 @@ function joinGameRoom(gameId, user, callback) {
 }
 
 /**
- *
+ * @throws {exceptions.RequestRejectedException} thrown when room is already full
  * @param {mongoose.Document} game
  * @param {Object} playerInfo contains the following keys: playerId, lat, lon
+ * @returns {mongoose.Document} game with updated value for player and saved
  */
 function addPlayerToGame(game, playerInfo) {
   if (game.players.length >= GameConfig.maxPlayers ||
     game.geolocations.length >= GameConfig.maxPlayers) {
-    return new exceptions.BackendException(
+    throw new exceptions.BackendException(
       `${game.name} already has max players`);
   }
 
