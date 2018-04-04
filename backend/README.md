@@ -1,21 +1,52 @@
-# nodejs-restful-api
-![RESTful API design with Node.js](https://cdn-images-1.medium.com/max/2000/1*jjYC9tuf4C3HkHCP5PcKTA.jpeg "RESTful API design with Node.js")
+# CS480/backend
 
-How to create a RESTful CRUD API using Nodejs?
+Nodejs and express app that serves as our REST API
 
-This tutorial will demo how to set up a bare bones 
-API using mongodb as the database.
+## Requires
 
-It consist of a User model and controller. The model
-defines the data, and the controller will contain all 
-the business logic needed to interact with the database. 
+[nodejs](https://nodejs.org/en/)
 
-It has a db file which will be used to
-connect the app to the database, and an app file used
-for bootstrapping the application itself.
+## Install
+ 
+```
+$ git clone git@github.com:Operative13/CS480.git
+$ cd CS480/backend
+$ npm i
+```
 
-The server file is used to spin up the server and tells the
-app to listen on a specific port.
+You need to copy `example.config.js` to `config.js` and fill out config info
+for connecting to your MongoDB URI. Ask James, @jtara1, for the team's config
+or create your own at mlab.com or where ever.
 
-Full tutorial can be found at:
+## Run
+
+From backend directory
+
+```
+$ npm start
+```
+
+you might need to `npm i nodemon`
+
+Alternatively, just use `node` instead of `nodemon` (with `node server.js`)
+to run the server 
+(`npm start` will invoke the script at the location specified in package.json) 
+
+
+## Dev Tools
+
+| Program | Purpose |
+| --- | --- |
+| Webstorm | IDE |
+| Postman | Creates HTTP requests & allows for changes in request body or header |
+| mongo-shell | Interact with MongoDB directly |
+
+Note: mlab.com requires mongo v3.0 or higher (Debian repos outdated as always)
+
+Note2: mongo-server (`mongod`) needs to be running before you can use 
+`mongo` (mongo-shell or mongo-client at least).
+
+---
+
+boilerplate code for RESTful API for users originated from:
 https://hackernoon.com/restful-api-design-with-node-js-26ccf66eab09#.s5l66zyeu
