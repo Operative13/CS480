@@ -7,6 +7,7 @@ router.use(bodyParser.json());
 const Game = new require('./Game');
 const GameConfig = require('./GameConfiguration.js');
 const exceptions = require('../exceptions/exceptions.js');
+const RequestRejectedException = exceptions.RequestRejectedException;
 
 /**
  * Send all games
@@ -28,45 +29,70 @@ router.post('/', function (req, res) {
   Game.create({
       name: req.body.name,
     }, (err, game) => {
-      if (err) {
-        // duplicate key error (game with this name already exists)
-        if (err.code === 11000) {
-          // try to join the room
-        }
+      let playerInfo = {
+        myPlayerId: req.body.myPlayerId,
+        lat: req.body.lat,
+        lon: req.body.lon
+      };
+      console.log(game);
+
+      // error occurred and it's not because this game room name already exists
+      if (err && err.code !== 11000) {
         return res.status(500).send(err);
+      } else {
+        // player created and is added to this game room or he is just added to
+        // this game room
+        return joinGameRoom(req.body.name, playerInfo, res);
       }
-      
-      return res.status(200).send(`created or joined\n${game}`);
   });
 });
 
-function joinGameRoom(gameId, user, callback) {
-  Game.findOne({_id: gameId}, callback=(err, game) => {
-    if (err) return err;
+/**
+ * Attempts to put the player in a game room
+ * if that fails (server error or room is full), status > 299 and error message
+ * is sent back in response body
+ * @param {String} gameName name property / key of the game Document
+ * @param {Object} playerInfo contains the following keys: playerId, lat, lon
+ * @param httpResponse response created by express when the original HTTP
+ * request was made
+ */
+function joinGameRoom(gameName, playerInfo, httpResponse) {
+  Game.findOne({name: gameName}, (err, game) => {
+    if (err) return httpResponse.status(500).send(error);
 
-  })
+    try {
+      addPlayerToGame(game, playerInfo);
+    } catch (error) {
+        if (error instanceof RequestRejectedException) {
+          // room was full already
+          return httpResponse.status(400).send(error.message);
+        }
+        // server error encountered
+        return httpResponse.status(500).send(error.message);
+    }
+    // successfully joined the game room
+    return httpResponse.status(200).send(`created or joined\n${game}`);
+  });
 }
 
 /**
- * @throws {exceptions.RequestRejectedException} thrown when room is already full
+ * @throws {RequestRejectedException} thrown when room is already full
  * @param {mongoose.Document} game
  * @param {Object} playerInfo contains the following keys: playerId, lat, lon
- * @returns {mongoose.Document} game with updated value for player and saved
+ * @returns {mongoose.Document} game with updated value for player, gets saved
  */
 function addPlayerToGame(game, playerInfo) {
+  console.log(game);
+  // if game room is at capacity
   if (game.players.length >= GameConfig.maxPlayers ||
     game.geolocations.length >= GameConfig.maxPlayers) {
-    throw new exceptions.BackendException(
+
+    throw new exceptions.RequestRejectedException(
       `${game.name} already has max players`);
   }
 
   game.players.push(playerInfo.myPlayerId);
-  let info = {
-    playerId: playerInfo.myPlayerId,
-    lat: playerInfo.lat || null,
-    lon: playerInfo.lon || null,
-  };
-  game.geolocations.push(info);
+  game.geolocations.push(playerInfo);
   game.save();
   return game;
 }

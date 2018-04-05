@@ -25,9 +25,6 @@ router.get('/', function (req, res) {
  * email
  */
 router.post('/', function (req, res) {
-  // bcrypt.genSalt(10, (err, salt) => {
-  // if (err) return res.status(500).send("bcrypt genSalt is bad");
-  console.log(req.body.password);
   bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
     if (err) return res.status(500).send("bcrypt screwed up");
 

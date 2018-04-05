@@ -10,7 +10,7 @@ const config = {
   partialMongoDbUri: '123.mlab.com:port11/dbName',
 
   get mongoDbUri() {
-    return `mongodb://${config.dbUser}:${config.dbPassword}@${config.partialMongoDbUri}`
+    return `mongodb://${config.dbUser}:${config.dbPassword}@${config.partialMongoDbUri}`;
   }
 };
 
