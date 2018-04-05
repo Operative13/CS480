@@ -29,18 +29,16 @@ router.post('/', function (req, res) {
   Game.create({
       name: req.body.name,
     }, (err, game) => {
-      let playerInfo = {
-        // use myPlayerId, or if not truthy, use playerId from request body
-        myPlayerId: req.body.myPlayerId || req.body.playerId,
-        lat: req.body.lat,
-        lon: req.body.lon
-      };
-      console.log(game);
-
       // error occurred and it's not because this game room name already exists
       if (err && err.code !== 11000) {
         return res.status(500).send(err);
       } else {
+        let playerInfo = {
+          // use myPlayerId, or if not truthy, use playerId from request body
+          myPlayerId: req.body.myPlayerId || req.body.playerId,
+          lat: req.body.lat,
+          lon: req.body.lon
+        };
         // player created and is added to this game room or he is just added to
         // this game room
         return joinGameRoom(req.body.name, playerInfo, res);
@@ -91,6 +89,7 @@ function addPlayerToGame(game, playerInfo) {
       `${game.name} already has max players`);
   }
 
+  // geolocations is missing from Document entirely somehow
   if (!game.geolocations) {
     throw new exceptions.BackendException(
       `${JSON.stringify(game, null, 2)}\ngeolocations not found in Game document`);
@@ -101,6 +100,10 @@ function addPlayerToGame(game, playerInfo) {
     lat: playerInfo.lat,
     lon: playerInfo.lon
   };
+
+  // required when modifying and saving value(s) of a property of type Mixed
+  // or of type Object in schema
+  game.markModified('geolocations');
   game.save();
   return game;
 }
@@ -119,19 +122,27 @@ router.get('/:id', function(req, res) {
 
 /**
  * Update game info
- * Needs: id (User _id: ObjectId), myPlayerId, lat, lon
+ * Needs: myPlayerId, lat, lon
  * in request body
  */
 router.post('/:id', function(req, res) {
   Game.findOne({_id: req.params.id}, function(err, game) {
     try {
-      game.geolocations[myPlayerId]['lat'] = req.body.lat;
-      game.geolocations[myPlayerId]['lon'] = req.body.lon;
+      if (!game.geolocations[req.body.myPlayerId]) {
+        console.error(`user._id ${req.body.myPlayerId} not found`);
+      }
+
+      game.geolocations[req.body.myPlayerId]['lat'] = req.body.lat;
+      game.geolocations[req.body.myPlayerId]['lon'] = req.body.lon;
       game.save();
-      return res.status(200).send(game);
+      // game.save()
+      //   .then((game) => {return res.status(200).send(game);})
+      //   .catch((err) => {return res.status(400).send(err.message);});
+
     } catch (error) {
       return res.status(400).send(error.message);
     }
+    return res.status(200).send(game);
   });
 });
 

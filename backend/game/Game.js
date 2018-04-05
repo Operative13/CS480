@@ -15,6 +15,7 @@ const GameSchema = new Schema({
   // where the keys are an _id from a Document from User
   geolocations: {
     type: Schema.Types.Mixed,
+    default: {},
   },
 });
 
