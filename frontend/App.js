@@ -18,6 +18,8 @@ export default class App extends Component {
     this.getGeolocation();
     // call the method every 60 seconds
     setInterval(this.getGeolocation, 60000);
+    
+    // this.getUsers('192.168.254.10', '3000');
   }
 
   getGeolocation() {
@@ -27,6 +29,20 @@ export default class App extends Component {
         {geolocation: JSON.stringify(locationInfo.coords)}
       );
     });
+  }
+
+  async getUsers() {
+    try {
+      let response = await fetch(
+        `http://${hostname}:${port}/api/users`
+        // 'http://localhost:3000/api/users'
+      );
+      let responseJson = JSON.parse(await response.text());
+      console.log(responseJson);
+      return responseJson
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   render() {
