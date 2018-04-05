@@ -30,7 +30,8 @@ router.post('/', function (req, res) {
       name: req.body.name,
     }, (err, game) => {
       let playerInfo = {
-        myPlayerId: req.body.myPlayerId,
+        // use myPlayerId, or if not truthy, use playerId from request body
+        myPlayerId: req.body.myPlayerId || req.body.playerId,
         lat: req.body.lat,
         lon: req.body.lon
       };
@@ -59,9 +60,8 @@ router.post('/', function (req, res) {
 function joinGameRoom(gameName, playerInfo, httpResponse) {
   Game.findOne({name: gameName}, (err, game) => {
     if (err) return httpResponse.status(500).send(error);
-
     try {
-      addPlayerToGame(game, playerInfo);
+      game = addPlayerToGame(game, playerInfo);
     } catch (error) {
         if (error instanceof RequestRejectedException) {
           // room was full already
@@ -71,7 +71,7 @@ function joinGameRoom(gameName, playerInfo, httpResponse) {
         return httpResponse.status(500).send(error.message);
     }
     // successfully joined the game room
-    return httpResponse.status(200).send(`created or joined\n${game}`);
+    return httpResponse.status(200).send(game);
   });
 }
 
@@ -79,20 +79,28 @@ function joinGameRoom(gameName, playerInfo, httpResponse) {
  * @throws {RequestRejectedException} thrown when room is already full
  * @param {mongoose.Document} game
  * @param {Object} playerInfo contains the following keys: playerId, lat, lon
+ *
  * @returns {mongoose.Document} game with updated value for player, gets saved
  */
 function addPlayerToGame(game, playerInfo) {
-  console.log(game);
   // if game room is at capacity
   if (game.players.length >= GameConfig.maxPlayers ||
-    game.geolocations.length >= GameConfig.maxPlayers) {
+    (game.geolocations && Object.keys(game.geolocations).length >= GameConfig.maxPlayers)) {
 
     throw new exceptions.RequestRejectedException(
       `${game.name} already has max players`);
   }
 
+  if (!game.geolocations) {
+    throw new exceptions.BackendException(
+      `${JSON.stringify(game, null, 2)}\ngeolocations not found in Game document`);
+  }
+
   game.players.push(playerInfo.myPlayerId);
-  game.geolocations.push(playerInfo);
+  game.geolocations[playerInfo.myPlayerId] = {
+    lat: playerInfo.lat,
+    lon: playerInfo.lon
+  };
   game.save();
   return game;
 }
@@ -102,10 +110,10 @@ function addPlayerToGame(game, playerInfo) {
  * E.g.: http://localhost:3000/api/games/5ac3fe68a79c5f523e8df030
  */
 router.get('/:id', function(req, res) {
-  Game.findById(req.params.id, function (err, match) {
+  Game.findById(req.params.id, function (err, game) {
     if (err) return res.status(500).send(err.message);
-    if (!match) return res.status(404).send("No game found.");
-    res.status(200).send(match);
+    if (!game) return res.status(404).send("No game found.");
+    res.status(200).send(game);
   });
 });
 
@@ -115,17 +123,14 @@ router.get('/:id', function(req, res) {
  * in request body
  */
 router.post('/:id', function(req, res) {
-  Game.find({_id: req.params.id}, function(err, match) {
-    // TODO: fix this later, better query
-    for (let i = 0; i < match.geolocations.length; i++) {
-      if (match.geolocations[i].playerId === req.body.myPlayerId) {
-        match.geolocations[req.body.myPlayerId] = {
-          lat: req.body.lat,
-          lon: req.body.lon,
-        };
-        match.save();
-        return res.status(200).send(match);
-      }
+  Game.findOne({_id: req.params.id}, function(err, game) {
+    try {
+      game.geolocations[myPlayerId]['lat'] = req.body.lat;
+      game.geolocations[myPlayerId]['lon'] = req.body.lon;
+      game.save();
+      return res.status(200).send(game);
+    } catch (error) {
+      return res.status(400).send(error.message);
     }
   });
 });

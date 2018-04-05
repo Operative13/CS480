@@ -10,16 +10,13 @@ const GameSchema = new Schema({
   // list of Strings which are their _id in User collection
   players: [Schema.Types.ObjectId],
 
-  geolocations: [
-    {
-      playerId: Schema.Types.ObjectId,
-      // latitude
-      lat: Number,
-      // longitude
-      lon: Number
-    }
-  ],
+  // extremely loose schema, stores whatever valid BSON, but by convention:
+  // { '123': { lat: 123, lon: 123 }, '456': { lat: 111, lon: 222 } }
+  // where the keys are an _id from a Document from User
+  geolocations: {
+    type: Schema.Types.Mixed,
+  },
 });
-mongoose.model('Game', GameSchema);
 
+mongoose.model('Game', GameSchema);
 module.exports = mongoose.model('Game');
