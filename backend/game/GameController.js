@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
+const ObjectId = require('mongoose').Types.ObjectId;
+
+// local imports
 const Game = new require('./Game');
 const GameConfig = require('./GameConfiguration.js');
 const exceptions = require('../exceptions/exceptions.js');
 const RequestRejectedException = exceptions.RequestRejectedException;
+const UserFunctions = require('../user/UserFunctions');
 
 /**
  * Send all games
@@ -20,46 +23,94 @@ router.get('/', function(req, res) {
 });
 
 /**
- * Create or join a new game
- * Needs:
- * myPlayerId, name (of game), lat, lon
- * defined in request body
+ * Create a game. If room exists and joinIfExists from request body is true,
+ * it'll try to join the existing room.
+ * request body needs:
+ * {
+ *  myUserId: ObjectId,
+ *  name: String,
+ *  lat: Number,
+ *  lon: Number,
+ *  joinIfExists: Boolean,
+ * }
  */
-router.post('/', function (req, res) {
+router.post('/create', async function (req, res) {
+  if (!UserFunctions.isUser(req.body.myUserId)) {
+    return res.status(400).send(`${req.body.myUserId} does not point to a user`);
+  }
+
   Game.create({
       name: req.body.name,
     }, (err, game) => {
       // error occurred and it's not because this game room name already exists
-      if (err && err.code !== 11000) {
+      // or game was full, but we don't want to join it here
+      if (err && (err.code !== 11000 || !req.body.joinIfExists)) {
         return res.status(500).send(err);
-      } else {
+      }
+      // room already exists, but try to join this existing room
+      // or the game was just created
+      else if (game || (err && req.body.joinIfExists)) {
         let playerInfo = {
-          // use myPlayerId, or if not truthy, use playerId from request body
-          myPlayerId: req.body.myPlayerId || req.body.playerId,
-          lat: req.body.lat,
-          lon: req.body.lon
+          // use myUserId, or if not truthy, use other one
+          myUserId: req.body.myUserId || req.body.userId,
+          lat: req.body.lat || null,
+          lon: req.body.lon || null,
         };
         // player created and is added to this game room or he is just added to
         // this game room
         return joinGameRoom(req.body.name, playerInfo, res);
       }
+      return res.status(500).send('creating game room screwed up');
   });
 });
 
 /**
- * Attempts to put the player in a game room
+ * request body needs:
+ * {
+ *  myUserId: ObjectId
+ *  gameName: String,
+ *  username: String,
+ * }
+ *
+ * at least one of the following is required: gameName, username
+ * where the username is the name of the user located in a game that you'd
+ * like to join
+ */
+router.post('/join', (req, res) => {
+  let userInfo = {userId: req.body.myUserId, lat: null, lon: null};
+
+  if (req.body.gameName) {
+    Game.findOne({'name': req.body.gameName}, (err, game) => {
+      if (err) return res.status(500).send(err);
+      return joinGameRoom(game, userInfo, res);
+    });
+  } else if (req.body.username) {
+    let userIdToJoin = UserFunctions.getUserId(req.body.username);
+
+    Game.findOne({'users': {$exists: userIdToJoin}}, (err, game) => {
+      if (err) return res.status(500).send(err);
+      return joinGameRoom(game, userInfo, res);
+    });
+  }
+
+  return res.status(400).send('Need to specify a username or game name to ' +
+    'search for to join');
+});
+
+/**
+ * Attempts to put the user in a game room
  * if that fails (server error or room is full), status > 299 and error message
  * is sent back in response body
  * @param {String} gameName name property / key of the game Document
- * @param {Object} playerInfo contains the following keys: playerId, lat, lon
+ * @param {Object} userInfo contains the following keys: userId, lat, lon
  * @param httpResponse response created by express when the original HTTP
  * request was made
  */
-function joinGameRoom(gameName, playerInfo, httpResponse) {
+function joinGameRoom(gameName, userInfo, httpResponse) {
   Game.findOne({name: gameName}, (err, game) => {
     if (err) return httpResponse.status(500).send(error);
     try {
-      game = addPlayerToGame(game, playerInfo);
+      game = addPlayerToGame(game, userInfo);
     } catch (error) {
         if (error instanceof RequestRejectedException) {
           // room was full already
@@ -75,18 +126,18 @@ function joinGameRoom(gameName, playerInfo, httpResponse) {
 
 /**
  * @throws {RequestRejectedException} thrown when room is already full
+ * @throws {exceptions.BackendException} if Document is screwed up
  * @param {mongoose.Document} game
- * @param {Object} playerInfo contains the following keys: playerId, lat, lon
- *
- * @returns {mongoose.Document} game with updated value for player, gets saved
+ * @param {Object} userInfo contains the following keys: userId, lat, lon
+ * @returns {mongoose.Document} game with updated value for user, gets saved
  */
-function addPlayerToGame(game, playerInfo) {
+function addPlayerToGame(game, userInfo) {
   // if game room is at capacity
-  if (game.players.length >= GameConfig.maxPlayers ||
-    (game.geolocations && Object.keys(game.geolocations).length >= GameConfig.maxPlayers)) {
+  if (game.users.length >= GameConfig.maxUsers ||
+    (game.geolocations && Object.keys(game.geolocations).length >= GameConfig.maxUsers)) {
 
     throw new exceptions.RequestRejectedException(
-      `${game.name} already has max players`);
+      `${game.name} already has max users`);
   }
 
   // geolocations is missing from Document entirely somehow
@@ -95,10 +146,10 @@ function addPlayerToGame(game, playerInfo) {
       `${JSON.stringify(game, null, 2)}\ngeolocations not found in Game document`);
   }
 
-  game.players.push(playerInfo.myPlayerId);
-  game.geolocations[playerInfo.myPlayerId] = {
-    lat: playerInfo.lat,
-    lon: playerInfo.lon
+  game.users.push(userInfo.myUserId);
+  game.geolocations[userInfo.myUserId] = {
+    lat: userInfo.lat,
+    lon: userInfo.lon
   };
 
   // required when modifying and saving value(s) of a property of type Mixed
@@ -122,23 +173,19 @@ router.get('/:id', function(req, res) {
 
 /**
  * Update game info
- * Needs: myPlayerId, lat, lon
+ * Needs: myUserId, lat, lon
  * in request body
  */
 router.post('/:id', function(req, res) {
   Game.findOne({_id: req.params.id}, function(err, game) {
     try {
-      if (!game.geolocations[req.body.myPlayerId]) {
-        console.error(`user._id ${req.body.myPlayerId} not found`);
+      if (!game.geolocations[req.body.myUserId]) {
+        console.error(`user._id ${req.body.myUserId} not found in game room`);
       }
 
-      game.geolocations[req.body.myPlayerId]['lat'] = req.body.lat;
-      game.geolocations[req.body.myPlayerId]['lon'] = req.body.lon;
+      game.geolocations[req.body.myUserId]['lat'] = req.body.lat;
+      game.geolocations[req.body.myUserId]['lon'] = req.body.lon;
       game.save();
-      // game.save()
-      //   .then((game) => {return res.status(200).send(game);})
-      //   .catch((err) => {return res.status(400).send(err.message);});
-
     } catch (error) {
       return res.status(400).send(error.message);
     }
