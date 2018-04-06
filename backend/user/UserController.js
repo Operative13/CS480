@@ -12,7 +12,7 @@ const User = new require('./User');
  */
 router.get('/', function (req, res) {
   User.find({}, function (err, users) {
-    if (err) return res.status(500).send("There was a problem finding the users.");
+    if (err) return res.status(500).send(err);
     res.status(200).send(users);
   });
 });
@@ -24,8 +24,7 @@ router.get('/', function (req, res) {
  * Optional in request body:
  * email
  */
-router.post('/', function (req, res) {
-  console.log(req.body.password);
+router.post('/register', function (req, res) {
   bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
     if (err) return res.status(500).send(err.message);
 
@@ -40,6 +39,19 @@ router.post('/', function (req, res) {
       }
     );
   });
+});
+
+// given a username and password, return the user Document
+router.post('/login', function(req, user) {
+  User.find({username: req.body.username}, (req, res) => {
+    bcrypt.compare(req.body.password, user.password, (err, matched) => {
+      if (err) return res.status(500).send(err);
+      if (matched) {
+        return res.status(200).send(user);
+      }
+      return res.status(400).send({"message": "password mismatch"});
+    })
+  })
 });
 
 /**
