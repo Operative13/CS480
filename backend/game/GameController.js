@@ -58,7 +58,7 @@ router.post('/create', async function (req, res) {
         };
         // player created and is added to this game room or he is just added to
         // this game room
-        return joinGameRoom(req.body.name, playerInfo, res);
+        return joinGameByName(req.body.name, playerInfo, res);
       }
       return res.status(500).send('creating game room screwed up');
   });
@@ -76,39 +76,58 @@ router.post('/create', async function (req, res) {
  * where the username is the name of the user located in a game that you'd
  * like to join
  */
-router.post('/join', (req, res) => {
-  let userInfo = {userId: req.body.myUserId, lat: null, lon: null};
+router.post('/join', async (req, res) => {
+  // validate user id given
+  if (!UserFunctions.isUser(req.body.myUserId)) {
+    return res
+      .status(400)
+      .send(`Invalid user._id from myUserId = ${req.body.myUserId}`);
+  }
 
+  let userInfo = {myUserId: req.body.myUserId, lat: null, lon: null};
+
+  // game room name to join was provided by requester
   if (req.body.gameName) {
     Game.findOne({'name': req.body.gameName}, (err, game) => {
       if (err) return res.status(500).send(err);
-      return joinGameRoom(game, userInfo, res);
-    });
-  } else if (req.body.username) {
-    let userIdToJoin = UserFunctions.getUserId(req.body.username);
-
-    Game.findOne({'users': {$exists: userIdToJoin}}, (err, game) => {
-      if (err) return res.status(500).send(err);
-      return joinGameRoom(game, userInfo, res);
+      return joinGame(game, userInfo, res);
     });
   }
+  // username to join was provided by requester
+  else if (req.body.username) {
+    let userIdToJoin = await UserFunctions.getUserId(req.body.username);
+    // given username to join isn't a user at all
+    if (!userIdToJoin) {
+      return res
+        .status(400)
+        .send(`Could not find user with username = ${req.body.username}`);
+    }
 
-  return res.status(400).send('Need to specify a username or game name to ' +
-    'search for to join');
+    // wait for the query and callback to complete
+    await Game.findOne(
+      // janky JS syntax to allow for an expression to be used as a key
+      {[`geolocations.${userIdToJoin}`]: {$exists: true}},
+      (err, game) => {
+        if (err) return res.status(500).send(err);
+        return joinGame(game, userInfo, res);
+      }
+    );
+  }
+  // no username or gameName was provided in request body
+  else {
+    return res.status(400).send('Need to specify a username or game name to ' +
+      'search for to join');
+  }
 });
 
-/**
- * Attempts to put the user in a game room
- * if that fails (server error or room is full), status > 299 and error message
- * is sent back in response body
- * @param {String} gameName name property / key of the game Document
- * @param {Object} userInfo contains the following keys: userId, lat, lon
- * @param httpResponse response created by express when the original HTTP
- * request was made
- */
-function joinGameRoom(gameName, userInfo, httpResponse) {
-  Game.findOne({name: gameName}, (err, game) => {
-    if (err) return httpResponse.status(500).send(error);
+function joinGame(game, userInfo, httpResponse, error) {
+    if (error) return httpResponse.status(500).send(error);
+    if (!game) {
+      return httpResponse
+        .status(400)
+        .send(`No game found, game =\n${JSON.stringify(game, null, 2)}`);
+    }
+
     try {
       game = addPlayerToGame(game, userInfo);
     } catch (error) {
@@ -121,6 +140,21 @@ function joinGameRoom(gameName, userInfo, httpResponse) {
     }
     // successfully joined the game room
     return httpResponse.status(200).send(game);
+}
+
+/**
+ * Attempts to put the user in a game room
+ * if that fails (server error or room is full), status > 299 and error message
+ * is sent back in response body
+ * @param {String} gameName name property / key of the game Document
+ * @param {Object} userInfo contains the following keys: userId, lat, lon
+ * @param httpResponse response created by express when the original HTTP
+ * request was made
+ * @returns {undefined, Response}
+ */
+function joinGameByName(gameName, userInfo, httpResponse) {
+  Game.findOne({name: gameName}, (err, game) => {
+    return joinGame(game, userInfo, httpResponse, err);
   });
 }
 
