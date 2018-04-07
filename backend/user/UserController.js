@@ -41,17 +41,28 @@ router.post('/register', function (req, res) {
   });
 });
 
-// given a username and password, return the user Document
-router.post('/login', function(req, user) {
-  User.find({username: req.body.username}, (req, res) => {
+/**
+ * Returns status code 200 and User document if it successfully verifies
+ * username and password
+ * Request body should contain:
+ * {
+ *  username: String,
+ *  password: String,
+ * }
+ */
+router.post('/login', function(req, res) {
+  User.findOne({username: req.body.username}, (err, user) => {
+    if (err) return res.status(500).send(err);
+    if (!user) return res.status(400).send(`no such user, username = ${req.body.username}`);
+
     bcrypt.compare(req.body.password, user.password, (err, matched) => {
       if (err) return res.status(500).send(err);
       if (matched) {
         return res.status(200).send(user);
       }
       return res.status(400).send({"message": "password mismatch"});
-    })
-  })
+    });
+  });
 });
 
 /**
@@ -64,27 +75,5 @@ router.get('/:id', function (req, res) {
     res.status(200).send(user);
   });
 });
-
-/**
- * deletes a specific user queried by their _id field from db.users
- */
-router.delete('/:id', function (req, res) {
-  User.findByIdAndRemove(req.params.id, function (err, user) {
-    if (err) return res.status(500).send("There was a problem deleting the user.");
-    res.status(200).send("User: "+ user.name +" was deleted.");
-  });
-});
-
-/**
- * updates a user
- * @returns a specific user queried by their _id field from db.users
- */
-router.put('/:id', function (req, res) {
-  User.findByIdAndUpdate(req.params.id, req.body, {new: true}, function (err, user) {
-    if (err) return res.status(500).send("There was a problem updating the user.");
-    res.status(200).send(user);
-  });
-});
-
 
 module.exports = router;
