@@ -1,8 +1,5 @@
-class BaseException {
-  constructor(message, errorCode) {
-    this.message = message || "no message given";
-    this.errorCode = errorCode || 0;
-  }
+class BaseException extends Error {
+
 }
 
 class BackendException extends BaseException {
@@ -13,5 +10,13 @@ class RequestRejectedException extends BaseException {
 
 }
 
-const exceptions = { BackendException, RequestRejectedException };
-module.exports = exceptions;
+function errorToJson(error) {
+  return {
+    type: "error",
+    message: error.message,
+    code: error.code,
+    stack: error.stack,
+  };
+}
+
+module.exports = { BackendException, RequestRejectedException, errorToJson };

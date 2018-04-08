@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 const User = new require('./User');
+const { errorToJson } = require('../exceptions/exceptions');
 
 /**
  * @returns all users from db.users
@@ -26,16 +27,18 @@ router.get('/', function (req, res) {
  */
 router.post('/register', function (req, res) {
   bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
-    if (err) return res.status(500).json(err.message);
+    if (err) return res.status(500).json(errorToJson(err));
+    let newUser = {
+      username: req.body.username,
+      password: hashedPassword,
+    };
+    if (req.body.email) newUser['email'] = req.body.email;
 
-    User.create({
-        username: req.body.username,
-        email: req.body.email,
-        password: hashedPassword,
-      },
+    User.create(
+      newUser,
       function (err, user) {
-        if (err) return res.status(500).json(err.message);
-        res.status(200).json(user);
+        if (err) return res.status(500).json(errorToJson(err));
+        res.status(200).send(user);
       }
     );
   });

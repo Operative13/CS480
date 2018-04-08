@@ -1,4 +1,3 @@
-
 class BaseConnection {
   constructor(domain, port, protocol='http://') {
     this.domain = domain;

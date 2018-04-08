@@ -1,6 +1,10 @@
 const exceptions = require('../exceptions/exceptions');
 const GameConfig = require('./GameConfiguration');
 const Game = new require('./Game');
+const {
+  RequestRejectedException,
+  BackendException
+} = require('../exceptions/exceptions');
 
 module.exports = {joinGame, joinGameByName};
 
