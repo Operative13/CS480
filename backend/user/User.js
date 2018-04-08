@@ -16,8 +16,10 @@ const UserSchema = new mongoose.Schema({
   email: {
     type: String,
 
+    // lazy match, anything@anything
+    match: /.{1,1000}@.{1,50}/,
     // string verified to represent an email by RFC 5322 regex
-    match: rfc5322CompliantEmailRegex,
+    // match: rfc5322CompliantEmailRegex,
 
     // default: `${Date.now().toString()}@fake.email.com`,
     // TODO: could significantly slow down server at least during user creation

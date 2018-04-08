@@ -26,7 +26,7 @@ router.get('/', function (req, res) {
  */
 router.post('/register', function (req, res) {
   bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
-    if (err) return res.status(500).send(err.message);
+    if (err) return res.status(500).json(err.message);
 
     User.create({
         username: req.body.username,
@@ -34,8 +34,8 @@ router.post('/register', function (req, res) {
         password: hashedPassword,
       },
       function (err, user) {
-        if (err) return res.status(500).send(err.message);
-        res.status(200).send(user);
+        if (err) return res.status(500).json(err.message);
+        res.status(200).json(user);
       }
     );
   });
@@ -52,15 +52,15 @@ router.post('/register', function (req, res) {
  */
 router.post('/login', function(req, res) {
   User.findOne({username: req.body.username}, (err, user) => {
-    if (err) return res.status(500).send(err);
-    if (!user) return res.status(400).send(`no such user, username = ${req.body.username}`);
+    if (err) return res.status(500).json(err);
+    if (!user) return res.status(400).json(`no such user, username = ${req.body.username}`);
 
     bcrypt.compare(req.body.password, user.password, (err, matched) => {
-      if (err) return res.status(500).send(err);
+      if (err) return res.status(500).json(err);
       if (matched) {
-        return res.status(200).send(user);
+        return res.status(200).json(user);
       }
-      return res.status(400).send({"message": "password mismatch"});
+      return res.status(400).json({"message": "password mismatch"});
     });
   });
 });

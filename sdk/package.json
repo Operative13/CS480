@@ -1,0 +1,16 @@
+{
+  "name": "CS480/sdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "echo not implemented",
+    "test": "node test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^2.1.2"
+  },
+  "devDependencies": {}
+}
