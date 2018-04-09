@@ -5,34 +5,33 @@ const { spawn } = require('child_process');
  * @param {String} cmd
  * @return {Object} { stdout: String, stderr: String }
  */
-function sh(cmd, ...args) {
-  // const ls = spawn('ls', ['-lh', '/usr']);
+function sh(cmd, resolve, reject, ...args) {
   const command = spawn(cmd, args);
 
-  command.stdout.on('data', (data) => {
-    console.log(`stdout: ${data}`);
-  });
+  console.log(`stdout: $ ${cmd} ${args.join(' ')}`);
 
-  command.stderr.on('data', (data) => {
-    console.log(`stderr: ${data}`);
-  });
+  command.stdout.on('data', (data) => resolve(data.toString()));
+  command.stderr.on('data', (data) => reject(data.toString()));
 
-  command.on('close', (code) => {
-    console.log(`child process exited with code ${code}`);
-  });
+  // command.on('close', (code) => {
+  //   // console.log(`child process exited with code ${code}`);
+  // });
 }
 
 /**
  * Use shell to execute a command and print the
- * output from stdout
- * @param {String} cmd 
+ * output from stdout. Also returns values from stdout and stderr in through
+ * a promise.
+ * @returns {Promise<String>} resolveValue is String from stdout rejectValue is
+ *  String from stderr
  */
-async function call(cmd) {
+function call(cmd) {
   let commands = cmd.split(' ');
-  return sh(commands[0], commands.splice(1));
+  return new Promise((resolve, reject) => {
+    sh(commands[0], resolve, reject, commands.splice(1));
+  });
 }
 
 module.exports = {
-  sh,
   call,
 };

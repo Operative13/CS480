@@ -8,6 +8,7 @@ for Linux (Debian variants).
 - nodejs
 - redis
 - mongod (mongodb-server)
+- mocha
 
 ## Install 
 

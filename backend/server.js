@@ -1,3 +1,4 @@
+const program = require('commander');
 const { app } = require('./app');
 var port = process.env.PORT || 3000;
 var hostname = process.env.HOST || 'localhost';
@@ -5,15 +6,16 @@ var hostname = process.env.HOST || 'localhost';
 // settings and you should be hosting on $(hostname -I)
 // $ hostname -I # this should be your IP within your network
 
-// quick command line interface argument parsing
-for (let i = 2; i < process.argv.length; i++) {
-  if ('--host' === process.argv[i]) {
-    hostname = process.argv[i + 1];
-  } else if ('--port' === process.argv[i]) {
-    port = process.argv[i + 1];
-  }
-}
+program
+  .version('0.0.0')
+  .option('-h', '--host', '--hostname')
+  .option('-p', '--port')
+  .option('--mongodb-uri')
+  .parse(process.argv);
 
-const server = app.listen(port, hostname, function() {
+const db = require('./db');
+db.connectToDb(program.mongodbUri);
+
+const server = app.listen(program.port || port, program.hostname || hostname, function() {
   console.log(`Express nodejs server available at: http://${hostname}:${port}`);
 });
