@@ -8,14 +8,17 @@ var hostname = process.env.HOST || 'localhost';
 
 program
   .version('0.0.0')
-  .option('-h', '--host', '--hostname')
-  .option('-p', '--port')
-  .option('--mongodb-uri')
+  .allowUnknownOption(true)
+  .option('-h, --host <host>')
+  .option('-p, --port <port>')
+  .option('-u, --mongodb-uri <uri>')
   .parse(process.argv);
 
 const db = require('./db');
 db.connectToDb(program.mongodbUri);
 
-const server = app.listen(program.port || port, program.hostname || hostname, function() {
+console.log(program.host);
+
+const server = app.listen(program.port || port, program.host || hostname, function() {
   console.log(`Express nodejs server available at: http://${hostname}:${port}`);
 });
