@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 /**
- * Represents a single user and allows for access to backend REST API
+ * Represents a single users and allows for access to backend REST API
  * UserController where /api/users routes are defined
  */
 class User {
@@ -45,7 +45,7 @@ class User {
   }
 
   /**
-   * Creates (registers) a new user given a unique username and password.
+   * Creates (registers) a new users given a unique username and password.
    * email is optional
    * @param username
    * @param password
@@ -89,7 +89,7 @@ class User {
 
   /**
    * Login given a username and password. Updates username, id, & email for
-   * this user
+   * this users
    * @param {String} username
    * @param {String} password - not hashed
    * @returns {Promise<*>} on resolve, passes Object from response.body

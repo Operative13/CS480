@@ -21,10 +21,10 @@ async function getUserId(username) {
 
 /**
  * @param {String} userId
- * @returns {boolean} true if there exists a user of that userId
+ * @returns {boolean} true if there exists a users of that userId
  */
 function isUser(userId) {
-  // treats user Document as truthy value (converts it to boolean)
+  // treats users Document as truthy value (converts it to boolean)
   return !!getUser(userId);
 }
 

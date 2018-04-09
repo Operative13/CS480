@@ -1,5 +1,5 @@
 const config = {
-  // limit on number of users per game session
+  // limit on number of users per games session
   maxUsers: 2,
 };
 

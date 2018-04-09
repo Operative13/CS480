@@ -9,10 +9,10 @@ const {
 module.exports = {joinGame, joinGameByName};
 
 /**
- * Attempts to put the user in a game room
+ * Attempts to put the users in a games room
  * if that fails (server error or room is full), status > 299 and error message
  * is sent back in response body
- * @param {mongoose.Document} game the game you want the user to join
+ * @param {mongoose.Document} game the games you want the users to join
  * @param {Object} userInfo follows schema: {
  *    myUserId: String,
  *    lat: Number,
@@ -41,15 +41,15 @@ function joinGame(game, userInfo, httpResponse, error) {
         // server error encountered
         return httpResponse.status(500).send(error.message);
     }
-    // successfully joined the game room
+    // successfully joined the games room
     return httpResponse.status(200).send(game);
 }
 
 /**
- * Attempts to put the user in a game room given the name of the game room
+ * Attempts to put the users in a games room given the name of the games room
  * if that fails (server error or room is full), status > 299 and error message
  * is sent back in response body
- * @param {String} gameName name property / key of the game Document
+ * @param {String} gameName name property / key of the games Document
  * @param {Object} userInfo follows schema: {
  *    myUserId: String,
  *    lat: Number,
@@ -70,10 +70,10 @@ function joinGameByName(gameName, userInfo, httpResponse) {
  * @throws {BackendException} if Document is screwed up
  * @param {mongoose.Document} game
  * @param {Object} userInfo contains the following keys: userId, lat, lon
- * @returns {mongoose.Document} game with updated value for user, gets saved
+ * @returns {mongoose.Document} games with updated value for users, gets saved
  */
 function addPlayerToGame(game, userInfo) {
-  // if game room is at capacity
+  // if games room is at capacity
   if (game.users.length >= GameConfig.maxUsers ||
     (game.geolocations && Object.keys(game.geolocations).length >= GameConfig.maxUsers)) {
 

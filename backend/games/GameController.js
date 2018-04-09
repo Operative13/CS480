@@ -12,7 +12,7 @@ const {
   RequestRejectedException,
   BackendException
 } = require('../exceptions/exceptions.js');
-const UserFunctions = require('../user/UserFunctions');
+const UserFunctions = require('../users/UserFunctions');
 const { joinGame, joinGameByName } = require('./GameFunctions');
 
 /**
@@ -26,7 +26,7 @@ router.get('/', function(req, res) {
 });
 
 /**
- * Create a game. If room exists and joinIfExists from request body is true,
+ * Create a games. If room exists and joinIfExists from request body is true,
  * it'll try to join the existing room.
  * request body needs:
  * {
@@ -45,13 +45,13 @@ router.post('/create', async function (req, res) {
   Game.create({
       name: req.body.name,
     }, (err, game) => {
-      // error occurred and it's not because this game room name already exists
-      // or game was full, but we don't want to join it here
+      // error occurred and it's not because this games room name already exists
+      // or games was full, but we don't want to join it here
       if (err && (err.code !== 11000 || !req.body.joinIfExists)) {
         return res.status(500).send(err);
       }
       // room already exists, but try to join this existing room
-      // or the game was just created
+      // or the games was just created
       else if (game || (err && req.body.joinIfExists)) {
         let playerInfo = {
           // use myUserId, or if not truthy, use other one
@@ -59,11 +59,11 @@ router.post('/create', async function (req, res) {
           lat: req.body.lat || null,
           lon: req.body.lon || null,
         };
-        // player created and is added to this game room or he is just added to
-        // this game room
+        // player created and is added to this games room or he is just added to
+        // this games room
         return joinGameByName(req.body.name, playerInfo, res);
       }
-      return res.status(500).send('creating game room screwed up');
+      return res.status(500).send('creating games room screwed up');
   });
 });
 
@@ -76,11 +76,11 @@ router.post('/create', async function (req, res) {
  * }
  *
  * at least one of the following is required: gameName, username
- * where the username is the name of the user located in a game that you'd
+ * where the username is the name of the users located in a games that you'd
  * like to join
  */
 router.post('/join', async (req, res) => {
-  // validate user id given
+  // validate users id given
   if (!UserFunctions.isUser(req.body.myUserId)) {
     return res
       .status(400)
@@ -89,7 +89,7 @@ router.post('/join', async (req, res) => {
 
   let userInfo = {myUserId: req.body.myUserId, lat: null, lon: null};
 
-  // game room name to join was provided by requester
+  // games room name to join was provided by requester
   if (req.body.gameName) {
     Game.findOne({'name': req.body.gameName}, (err, game) => {
       if (err) return res.status(500).send(err);
@@ -99,7 +99,7 @@ router.post('/join', async (req, res) => {
   // username to join was provided by requester
   else if (req.body.username) {
     let userIdToJoin = await UserFunctions.getUserId(req.body.username);
-    // given username to join isn't a user at all
+    // given username to join isn't a users at all
     if (!userIdToJoin) {
       return res
         .status(400)
@@ -118,25 +118,25 @@ router.post('/join', async (req, res) => {
   }
   // no username or gameName was provided in request body
   else {
-    return res.status(400).send('Need to specify a username or game name to ' +
+    return res.status(400).send('Need to specify a username or games name to ' +
       'search for to join');
   }
 });
 
 /**
- * Get info on a specific game
+ * Get info on a specific games
  * E.g.: http://localhost:3000/api/games/5ac3fe68a79c5f523e8df030
  */
 router.get('/:id', function(req, res) {
   Game.findById(req.params.id, function (err, game) {
     if (err) return res.status(500).send(err.message);
-    if (!game) return res.status(404).send("No game found.");
+    if (!game) return res.status(404).send("No games found.");
     res.status(200).send(game);
   });
 });
 
 /**
- * Update game info
+ * Update games info
  * Needs: myUserId, lat, lon
  * in request body
  */

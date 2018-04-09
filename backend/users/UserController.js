@@ -19,7 +19,7 @@ router.get('/', function (req, res) {
 });
 
 /**
- * Create user in db.users
+ * Create users in db.users
  * Request body should contain:
  * username, password
  * Optional in request body:
@@ -69,12 +69,12 @@ router.post('/login', function(req, res) {
 });
 
 /**
- * @returns a specific user queried by their _id field from db.users
+ * @returns a specific users queried by their _id field from db.users
  */
 router.get('/:id', function (req, res) {
   User.findById(req.params.id, function (err, user) {
-    if (err) return res.status(500).send("There was a problem finding the user.");
-    if (!user) return res.status(404).send("No user found.");
+    if (err) return res.status(500).send("There was a problem finding the users.");
+    if (!user) return res.status(404).send("No users found.");
     res.status(200).send(user);
   });
 });
