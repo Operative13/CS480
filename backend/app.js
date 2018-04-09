@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
-let db = require('./db');
+
+const db = require('./db');
 
 const UserController = require('./users/UserController');
 const GameController = require('./games/GameController');

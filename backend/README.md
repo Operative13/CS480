@@ -4,9 +4,15 @@ Nodejs and express app that serves as our REST API
 
 ## Requires
 
-[nodejs](https://nodejs.org/en/)
+- [nodejs](https://nodejs.org/en/)
+- redis-server
 
 ## Install
+ 
+if your OS is some debian variant, 
+`$ sudo apt install redis-server`
+
+otherwise, figure out what to install to run `redis-server` 
  
 ```
 $ git clone git@github.com:Operative13/CS480.git
@@ -26,14 +32,14 @@ From backend directory
 $ npm start
 ```
 
+`redis-server` needs to be running in order for notification system to work
+(this is run via `npm start` right before `nodemon` is used to run our server)
+
 you might need to `npm i nodemon`
 
 Alternatively, just use `node` instead of `nodemon` (with `node server.js`)
 to run the server 
 (`npm start` will invoke the script at the location specified in package.json) 
-
-`redis-server` needs to be running in order for notification system to work
-(this is run via `npm start` right before `nodemon` is used to run our server)
 
 ## Dev Tools
 
