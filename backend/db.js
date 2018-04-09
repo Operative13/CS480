@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { call } = require('./utility/shell');
 
 try {
   const config = require('./config.js');
@@ -12,7 +11,8 @@ try {
   console.warn('Not using remote instance of mongodb, using localhost:27017');
 
   // start the mongo-server so we can do use local instance of MongoDB
-  call('sudo mongod');
+  // Note: you need to have mongodb-server running on the host PC for this
+  // $ sudo mongod
   mongoose.connect('mongodb://localhost/CS480')
     .catch((reason) => {
       console.error(reason);
