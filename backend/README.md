@@ -32,6 +32,8 @@ Alternatively, just use `node` instead of `nodemon` (with `node server.js`)
 to run the server 
 (`npm start` will invoke the script at the location specified in package.json) 
 
+`redis-server` needs to be running in order for notification system to work
+(this is run via `npm start` right before `nodemon` is used to run our server)
 
 ## Dev Tools
 
@@ -43,10 +45,14 @@ to run the server
 
 Note: mlab.com requires mongo v3.0 or higher (Debian repos outdated as always)
 
-Note2: mongo-server (`mongod`) needs to be running before you can use 
+Note2: mongo-server (`mongod`) might need to run in parallel before you can use 
 `mongo` (mongo-shell or mongo-client at least).
 
 ---
 
 boilerplate code for RESTful API for users originated from:
 https://hackernoon.com/restful-api-design-with-node-js-26ccf66eab09#.s5l66zyeu
+
+boilerplate code for creating events at routes for client-sided JS to listen
+on and respond to: 
+https://tomkersten.com/articles/server-sent-events-with-node/

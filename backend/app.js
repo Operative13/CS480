@@ -1,12 +1,6 @@
 const express = require('express');
 const app = express();
-var http = require('http').Server(app);
-var db = require('./db');
-var io = require('socket.io')(http);
-
-// io.onconnection('connection', (socket) => {
-//   console.log('users connected');
-// });
+let db = require('./db');
 
 const UserController = require('./users/UserController');
 const GameController = require('./games/GameController');
@@ -19,8 +13,10 @@ app.use('/api/notifications', NotificationController);
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 
-app.get('/', (req, res) => {
-  res.render('index');
-});
+// app.get('/notifications', (req, res) => {
+//   res.render('notifications');
+// });
 
-module.exports = { app, http, io };
+module.exports = {
+  app,
+};

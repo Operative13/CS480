@@ -1,4 +1,4 @@
-const { app, http } = require('./app');
+const { app } = require('./app');
 var port = process.env.PORT || 3000;
 var hostname = process.env.HOST || 'localhost';
 // to make public, you need to do port forwarding in your network router
@@ -14,6 +14,6 @@ for (let i = 2; i < process.argv.length; i++) {
   }
 }
 
-const server = http.listen(port, hostname, function() {
+const server = app.listen(port, hostname, function() {
   console.log(`Express nodejs server available at: http://${hostname}:${port}`);
 });
