@@ -10,7 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "node-fetch": "^2.1.2"
+    "node-fetch": "^2.1.2",
+    "winston": "^2.4.1"
   },
   "devDependencies": {}
 }

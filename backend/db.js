@@ -12,8 +12,13 @@ function connectToDb(mongoDbUri) {
     // start the mongo-server so we can do use local instance of MongoDB
     // Note: you need to have mongodb-server running on the host PC for this
     // $ sudo mongod
-    mongoose.connect(mongoDbUri || 'mongodb://localhost/CS480')
+    let uri = mongoDbUri || 'mongodb://localhost/CS480';
+    mongoose.connect(uri)
+      .then(() => {
+        console.log(`MongoDB running at ${uri}`)
+      })
       .catch((reason) => {
+        console.log(`MongoDB failed to run at ${uri}`)
         console.error(reason);
       });
   }
@@ -26,7 +31,7 @@ function connectToDb(mongoDbUri) {
       console.error(error);
       console.warn(`Failed to load MongoDB URI from config.js, attempting to\
         connect via ${mongoDbUri} or localhost:27017`);
-      connect(mongoDbUri || 'mongodb://localhost/CS480');
+      connect();
     }
   }
   else {

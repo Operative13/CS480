@@ -1,4 +1,6 @@
 const fetch = require('node-fetch');
+const logger = new require('winston');
+
 
 /**
  * Represents a single users and allows for access to backend REST API
@@ -69,6 +71,7 @@ class User {
     );
     promise.then((response) => {
       this._updateUser(response.body.id, response.body.username, response.body.email);
+      logger.info(`created new user, ${this.toString()}`);
       // return this._getJsonFromResponse(response);
       return response.json();
     });

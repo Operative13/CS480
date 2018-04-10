@@ -1,20 +1,33 @@
 const { call } = require('../backend/utility/shell');
 const port = '3000';
-
-call('hostname -I').then((host) => {
-  console.log(host);
-  // cli arg that is read by server.js to define hostname
-  // process.argv.push(`--host ${host.trim()}`);
-  process.argv.push(`--host`);
-  process.argv.push(host.trim());
-  console.log(process.argv);
-
-  // load up the server
-  const server = require('../backend/server');
-});
-
+const UserModel = new require('../backend/users/User');
+const BaseConnection = require('../sdk/BaseConnection');
+const UserSdk = require('../sdk/User');
 const assert = require('assert');
 
+call('hostname -I').then((host) => {
+  // cli arg that is read by server.js to define hostname and port
+  host = host.trim();
+  process.argv.push(`--host`);
+  process.argv.push(host);
+  process.argv.push('--mongodb-uri');
+  process.argv.push(`mongodb://${host}:27017`);
+
+  // load up the server
+  const { hostname, port, server } = require('../backend/server');
+
+  function testUserSdk() {
+    let conn = new BaseConnection(host, port);
+    let amy = new UserSdk(conn);
+    amy.create('amy123', 'pw', 'amy123@e.com')
+      .then(() => console.log(amy.toString()))
+      .catch((err) => console.error(err)) ;
+  }
+
+  teardown();
+  test();
+  testUserSdk();
+});
 
 function test() {
   describe('Array', function() {
@@ -26,21 +39,8 @@ function test() {
   });
 }
 
-const mongoose = require('mongoose');
-const User = require('../backend/users/User');
-
-function test2() {
-  let users = [
-    {username: 'james', password: 'pw', email: 'james@email.com'},
-  ];
-  User.insert(users).then((err, insertedUsers) => {
-    describe('User collection', function() {
-      describe('follows its schema', function() {
-        it('should be equal to users local variable', function() {
-            assert(true);
-          });
-        });
-    });
-  });
-
+function teardown() {
+  // removes all documents from db.users collection
+  UserModel.remove({});
 }
+

@@ -1,8 +1,6 @@
 const express = require('express');
 const app = express();
 
-// const db = require('./db');
-
 const UserController = require('./users/UserController');
 const GameController = require('./games/GameController');
 const NotificationController = require('./notifications/NotificationController');
