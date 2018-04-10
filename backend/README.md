@@ -10,14 +10,14 @@ Nodejs and express app that serves as our REST API
 ## Install
  
 if your OS is some debian variant, 
-`$ sudo apt install redis-server`
+`sudo apt install redis-server`
 
 otherwise, figure out what to install to run `redis-server` 
  
 ```
-$ git clone git@github.com:Operative13/CS480.git
-$ cd CS480/backend
-$ npm i
+git clone git@github.com:Operative13/CS480.git
+cd CS480/backend
+npm i
 ```
 
 You need to copy `example.config.js` to `config.js` and fill out config info
@@ -29,7 +29,7 @@ or create your own at mlab.com or where ever.
 From backend directory
 
 ```
-$ npm start
+npm start
 ```
 
 `redis-server` needs to be running in order for notification system to work
@@ -52,7 +52,9 @@ to run the server
 Note: mlab.com requires mongo v3.0 or higher (Debian repos outdated as always)
 
 Note2: mongo-server (`mongod`) might need to run in parallel before you can use 
-`mongo` (mongo-shell or mongo-client at least).
+`mongo` (mongo-shell or mongo-client at least). See
+https://github.com/Operative13/CS480/wiki/How-to-Install-MongoDB for help on 
+installing mongodb
 
 ---
 

@@ -19,9 +19,16 @@ call('hostname -I').then((host) => {
   function testUserSdk() {
     let conn = new BaseConnection(host, port);
     let amy = new UserSdk(conn);
-    amy.create('amy123', 'pw', 'amy123@e.com')
-      .then(() => console.log(amy.toString()))
-      .catch((err) => console.error(err)) ;
+    let username = 'amy123',
+        password = 'pw',
+        email = 'amy123@e.com';
+
+    amy.create(username, password, email)
+      .then((user) => {
+        assert(amy.username === username &&
+          amy.email === email);
+      })
+      .catch((err) => console.error(err));
   }
 
   teardown();
@@ -39,8 +46,15 @@ function test() {
   });
 }
 
+/**
+ * Please, do not call this while mongoose is connected to a remote URI.
+ * TODO: verify this isn't our shared mongoDB URI which holds all the actual
+ * TODO: info for the game (make sure it's not production connection)
+ */
 function teardown() {
   // removes all documents from db.users collection
-  UserModel.remove({});
+  UserModel.remove({})
+    .then(response => console.log('UserModel.remove({})', response))
+    .catch(err => console.err(err));
 }
 

@@ -58,25 +58,28 @@ class User {
     let userInfo = {username: username, password: password};
     if (email) userInfo['email'] = email;
 
-    let promise = fetch(
-      this._url + '/register',
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userInfo),
-      }
-    );
-    promise.then((response) => {
-      this._updateUser(response.body.id, response.body.username, response.body.email);
-      logger.info(`created new user, ${this.toString()}`);
-      // return this._getJsonFromResponse(response);
-      return response.json();
+    return new Promise((resolve, reject) => {
+      fetch(
+        this._url + '/register',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(userInfo),
+        })
+        .then((response) => {
+          response.json()
+            .then((json) => {
+              this._updateUser(json._id, json.username, json.email);
+              logger.info(`created new user:\n${this.toString()}`);
+              resolve(json);
+            })
+            .catch(err => {logger.error(err); reject(err)});
+        })
+        .catch((err) => {logger.error(err); reject(err.json())});
     });
-    promise.catch((err) => err.json());
-    return promise;
   }
 
   /**
@@ -123,6 +126,7 @@ class User {
     return JSON.stringify({
         id: this.id,
         username: this.username,
+        email: this.email,
       },
       null,
       2

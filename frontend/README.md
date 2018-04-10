@@ -9,9 +9,9 @@ React Native app that serves as our front end
 ## Install
  
 ```
-$ git clone git@github.com:Operative13/CS480.git
-$ cd CS480/frontend
-$ npm i
+git clone git@github.com:Operative13/CS480.git
+cd CS480/frontend
+npm i
 ```
 
 ## Run
@@ -19,7 +19,7 @@ $ npm i
 From frontend directory
 
 ```
-$ npm start
+npm start
 ```
 
 ## Dev Tools
