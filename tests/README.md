@@ -1,7 +1,8 @@
 # CS480/tests
 
 Contains our unit tests for everything. The following instructions are intended
-for Linux (Debian variants). 
+for Linux (Debian variants), and some additional instructions and initial
+running of the tests was done on Win10.
 
 ## Requires
 
@@ -13,7 +14,9 @@ for Linux (Debian variants).
 
 - redis (only if you use /api/notifications/*)
 
-## Install 
+## Install Requirements
+
+#### Ubuntu 16.04
 
 ```
 # mongodb
@@ -32,16 +35,42 @@ sudo apt install -y redis-server nodejs mocha
 npm i
 ```
 
+#### Windows 10
+
+Have git bash or some program to allow you to clone, pull, push, and commit
+using git.
+
+Download nodejs lts https://nodejs.org/en/download/
+
 ## Setup
 
-Do this before running the tests. Do this once (process ends if your PC 
+Using cmd, powershell, or bash:
+
+```
+git clone git@github.com:Operative13/CS480.git
+cd tests
+npm i
+```
+
+#### Ubuntu 16.04
+
+Do this before running the tests. Do this once (process ends if your PC
 reboots though).
 ```
 sudo mongod
 ```
 
+#### Windows 10
+
+should be fine, might need to install the equivalent of the debian packages
+mongodb-core, mongodb-server, mongodb-clients
+
+might need to install redis-server equivalent
+
 
 ## Run
+
+from the CS480/tests directory
 
 ```
 npm test
