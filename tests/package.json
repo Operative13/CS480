@@ -10,7 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mongoose": "^5.0.14"
+    "CS480-backend": "file:../backend",
+    "CS480-sdk": "file:../sdk"
   },
   "devDependencies": {
     "jest": "^22.4.3",
