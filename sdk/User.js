@@ -113,7 +113,7 @@ export default class User {
       }
     )
       .then((response) => {
-        this._updateUser(response.body.id, response.body.username, response.body.email);
+        this._updateUser(response.body._id, response.body.username, response.body.email);
         return response.json();
       })
       .catch((err) => err);
