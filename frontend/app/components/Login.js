@@ -17,17 +17,12 @@ export default class Login extends React.Component {
         }
     }
 
-<<<<<<< HEAD
+
     //functions to skip login screen
     componentDidMount(){
         this._loadInitialState().done();
     }
-=======
-    componentDidMount(){
-        this._loadInitialState().done();
-    }
 
->>>>>>> 07186b4bd385e712e197b695c3444122729bfe31
     _loadInitialState = async () => {
 
         var value = await AsyncStorage.getItem('user');
@@ -74,7 +69,7 @@ export default class Login extends React.Component {
         );
     }
 
-<<<<<<< HEAD
+
     //function to login user and store user to async for faster login
     login = (userString, passString) => {
 
@@ -93,13 +88,6 @@ export default class Login extends React.Component {
                 alert(err);
             });
 
-=======
-    login = () => {
-        //alert('user = ' + this.state.username + ' pass = ' + this.state.password);
-        
-        this.props.navigation.navigate('MainMenu'); 
-        
->>>>>>> 07186b4bd385e712e197b695c3444122729bfe31
     }
 }
 
