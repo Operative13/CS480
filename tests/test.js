@@ -5,9 +5,11 @@ const BaseConnection = require('../sdk/BaseConnection');
 const UserSdk = require('../sdk/User');
 const assert = require('assert');
 
-call('hostname -I').then((host) => {
+//call('hostname -I').then((host) => {
+call('echo starting').then((stdout) => {
   // cli arg that is read by server.js to define hostname and port
-  host = host.trim();
+  //host = host.trim();
+  let host = 'localhost';
   process.argv.push(`--host`);
   process.argv.push(host);
   process.argv.push('--mongodb-uri');

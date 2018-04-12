@@ -1,6 +1,6 @@
 {
-  "name": "CS480-backend",
-  "version": "1.0.0",
+  "name": "kingdoms-game-backend",
+  "version": "0.0.0",
   "description": "",
   "main": "app.js",
   "scripts": {

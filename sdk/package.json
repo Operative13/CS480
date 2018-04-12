@@ -1,17 +1,19 @@
 {
-  "name": "CS480-sdk",
-  "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "name": "kingdoms-game-sdk",
+  "version": "0.0.4",
+  "description": "A REST API wrapper for the kingdoms-game backend",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Operative13/CS480/tree/master/sdk"
+  },
   "scripts": {
     "start": "echo not implemented",
     "test": "node test.js"
   },
-  "author": "",
+  "author": "jtara1",
   "license": "ISC",
   "dependencies": {
-    "node-fetch": "^2.1.2",
-    "winston": "^2.4.1"
+    "node-fetch": "^2.1.2"
   },
   "devDependencies": {}
 }

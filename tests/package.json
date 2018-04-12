@@ -1,6 +1,6 @@
 {
-  "name": "CS480-tests",
-  "version": "1.0.0",
+  "name": "kingdoms-game-tests",
+  "version": "0.0.0",
   "description": "",
   "main": "testAll.js",
   "scripts": {
@@ -10,10 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mongoose": "^5.0.14"
+    "kingdoms-game-backend": "file:../backend",
+    "kingdoms-game-sdk": "file:../sdk"
   },
   "devDependencies": {
-    "jest": "^22.4.3",
     "mocha": "^5.0.5"
   }
 }

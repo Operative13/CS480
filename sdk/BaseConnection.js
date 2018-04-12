@@ -1,4 +1,4 @@
-class BaseConnection {
+export default class BaseConnection {
   /**
    * Creates the URL using the given values
    * @param domain
@@ -14,7 +14,4 @@ class BaseConnection {
   toString() {
     return this.baseUrl;
   }
-
 }
-
-module.exports = BaseConnection;

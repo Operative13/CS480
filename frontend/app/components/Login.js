@@ -8,7 +8,7 @@ import User from 'kingdoms-game-sdk/User';
 import IP from '../../config';
 
 export default class Login extends React.Component {
-    
+
     constructor(props){
         super(props);
         this.state = {
@@ -17,25 +17,32 @@ export default class Login extends React.Component {
         }
     }
 
+<<<<<<< HEAD
     //functions to skip login screen
     componentDidMount(){
         this._loadInitialState().done();
     }
+=======
+    componentDidMount(){
+        this._loadInitialState().done();
+    }
+
+>>>>>>> 07186b4bd385e712e197b695c3444122729bfe31
     _loadInitialState = async () => {
-        
+
         var value = await AsyncStorage.getItem('user');
         if (value != null){
             this.props.navigation.navigate('MainMenu');
         }
     }
-    
+
     render(){
         return(
             <KeyboardAvoidingView behavior='padding' style={styles.wrapper}>
-            
+
                 <View style={styles.container}>
                     <Text style={styles.header}> - LOGIN - </Text>
-                    
+
                     <TextInput
                         style={styles.textInput} placeholder='Username'
                         onChangeText={ (username) => this.setState({username})}
@@ -46,27 +53,28 @@ export default class Login extends React.Component {
                         onChangeText={ (password) => this.setState({password})}
                         underlineColorAndroid='transparent'
                     />
-                    
+
                     <TouchableOpacity
                         style={styles.btn}
                         onPress={() => this.login(this.state.username,this.state.password) }
                     >
                         <Text>Log in</Text>
                     </TouchableOpacity>
-                        
+
                     <TouchableOpacity
                         style={styles.btn}
                         onPress={() => this.props.navigation.navigate('RegisterPage')}
                     >
                         <Text>Register</Text>
                     </TouchableOpacity>
-                    
+
                 </View>
-            
+
             </KeyboardAvoidingView>
         );
     }
 
+<<<<<<< HEAD
     //function to login user and store user to async for faster login
     login = (userString, passString) => {
 
@@ -85,6 +93,13 @@ export default class Login extends React.Component {
                 alert(err);
             });
 
+=======
+    login = () => {
+        //alert('user = ' + this.state.username + ' pass = ' + this.state.password);
+        
+        this.props.navigation.navigate('MainMenu'); 
+        
+>>>>>>> 07186b4bd385e712e197b695c3444122729bfe31
     }
 }
 
