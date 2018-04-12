@@ -1,6 +1,6 @@
 {
-  "name": "cs480-frontend",
-  "version": "0.1.0",
+  "name": "kingdoms-game-frontend",
+  "version": "0.0.0",
   "private": true,
   "devDependencies": {
     "react-native-scripts": "1.13.1",

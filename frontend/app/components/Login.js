@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpaci
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 
 export default class Login extends React.Component {
-    
+
     constructor(props){
         super(props);
         this.state = {
@@ -11,26 +11,26 @@ export default class Login extends React.Component {
             password: '',
         }
     }
-    
+
     componentDidMount(){
         this._loadInitialState().done();
     }
-    
+
     _loadInitialState = async () => {
-        
+
         var value = await AsyncStorage.getItem('user');
         if (value != null){
             this.props.navigation.navigate('MainMenu');
         }
     }
-    
+
     render(){
         return(
             <KeyboardAvoidingView behavior='padding' style={styles.wrapper}>
-            
+
                 <View style={styles.container}>
                     <Text style={styles.header}> - LOGIN - </Text>
-                    
+
                     <TextInput
                         style={styles.textInput} placeholder='Username'
                         onChangeText={ (username) => this.setState({username})}
@@ -41,27 +41,27 @@ export default class Login extends React.Component {
                         onChangeText={ (password) => this.setState({password})}
                         underlineColorAndroid='transparent'
                     />
-                    
+
                     <TouchableOpacity
                         style={styles.btn}
                         onPress={this.login}
                     >
                         <Text>Log in</Text>
                     </TouchableOpacity>
-                        
+
                     <TouchableOpacity
                         style={styles.btn}
                         onPress={() => this.props.navigation.navigate('RegisterPage')}
                     >
                         <Text>Register</Text>
                     </TouchableOpacity>
-                    
+
                 </View>
-            
+
             </KeyboardAvoidingView>
         );
     }
-    
+
     login = () => {
         //alert('user = ' + this.state.username + ' pass = ' + this.state.password);
         

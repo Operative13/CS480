@@ -1,7 +1,6 @@
-const fetch = require('node-fetch');
-const logger = new require('winston');
+import fetch from 'node-fetch';
 
-class Game {
+export default class Game {
   constructor(baseConnection) {
     this.id = null;
     this.name = null;

@@ -1,12 +1,10 @@
-const fetch = require('node-fetch');
-const logger = new require('winston');
-
+import fetch from 'node-fetch';
 
 /**
  * Represents a single users and allows for access to backend REST API
  * UserController where /api/users routes are defined
  */
-class User {
+export default class User {
 
   /**
    * @param {BaseConnection} baseConnection
@@ -73,12 +71,12 @@ class User {
           response.json()
             .then((json) => {
               this._updateUser(json._id, json.username, json.email);
-              logger.info(`created new user:\n${this.toString()}`);
+              console.info(`created new user:\n${this.toString()}`);
               resolve(json);
             })
-            .catch(err => {logger.error(err); reject(err)});
+            .catch(err => {console.error(err); reject(err)});
         })
-        .catch((err) => {logger.error(err); reject(err.json())});
+        .catch((err) => {console.error(err); reject(err.json())});
     });
   }
 
@@ -133,5 +131,3 @@ class User {
     );
   }
 }
-
-module.exports = User;

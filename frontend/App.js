@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
-import Login from './app/components/Login';
+import Login from './app/components/Login.js';
 import MainMenu from './app/components/MainMenu';
 import GameSearch from './app/components/GameSearch';
 import RegisterPage from './app/components/RegisterPage';
