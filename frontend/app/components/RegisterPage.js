@@ -1,6 +1,20 @@
 import React from 'react';
-import { StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpacity, AsyncStorage } from 'react-native';
+import {
+    StyleSheet,
+    Text,
+    View,
+    TextInput,
+    KeyboardAvoidingView,
+    TouchableOpacity,
+    AsyncStorage,
+    Keyboard
+} from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
+
+import BaseConnection from 'kingdoms-game-sdk/BaseConnection';
+import User from 'kingdoms-game-sdk/User';
+
+import IP from '../../config';
 
 export default class RegisterPage extends React.Component {
     
@@ -38,7 +52,7 @@ export default class RegisterPage extends React.Component {
                                       
                     <TouchableOpacity
                         style={styles.btn}
-                        onPress={this.register}
+                        onPress={() => this.register(this.state.username,this.state.password,this.state.email)}
                     >
                         <Text>Register</Text>
                     </TouchableOpacity>
@@ -55,10 +69,23 @@ export default class RegisterPage extends React.Component {
             </KeyboardAvoidingView>
         );
     }
-    
-    register = () => {
-        alert('user = ' + this.state.username + ' pass = ' + this.state.password);
-        this.props.navigation.goBack();
+
+    //function that handles attempt to register an account after button press
+    register = (userString, passString, emailString) => {
+        let baseConn = new BaseConnection( IP ,'3000');
+        let u = new User(baseConn);
+
+        u.create(userString, passString, emailString)
+            .then((res) => {
+                if(res.username != userString) {throw res}
+                alert('Successful account creation');
+                Keyboard.dismiss();
+                this.props.navigation.goBack();
+            })
+            .catch((err) => {
+                alert(err);
+            });
+
     }
     
     

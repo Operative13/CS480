@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import {StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpacity, Keyboard} from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 
 
@@ -67,16 +67,19 @@ export default class GameSearch extends React.Component {
     
     createRoom = () => {
         //alert('creating room');
+        Keyboard.dismiss();
         this.props.navigation.navigate('GameScreen');
     }
     
     joinRoomByName = () => {
         //alert('joining by room name');
+        Keyboard.dismiss();
         this.props.navigation.navigate('GameScreen');
     }
     
     joinRoomByUser = () => {
         //alert('join by user name');
+        Keyboard.dismiss();
         this.props.navigation.navigate('GameScreen');
     }
 }

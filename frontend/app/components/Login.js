@@ -1,6 +1,11 @@
 import React from 'react';
-import { StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpacity, AsyncStorage } from 'react-native';
+import { StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpacity, AsyncStorage, Keyboard } from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
+
+import BaseConnection from 'kingdoms-game-sdk/BaseConnection';
+import User from 'kingdoms-game-sdk/User';
+
+import IP from '../../config';
 
 export default class Login extends React.Component {
     
@@ -11,11 +16,11 @@ export default class Login extends React.Component {
             password: '',
         }
     }
-    
+
+    //functions to skip login screen
     componentDidMount(){
         this._loadInitialState().done();
     }
-    
     _loadInitialState = async () => {
         
         var value = await AsyncStorage.getItem('user');
@@ -44,7 +49,7 @@ export default class Login extends React.Component {
                     
                     <TouchableOpacity
                         style={styles.btn}
-                        onPress={this.login}
+                        onPress={() => this.login(this.state.username,this.state.password) }
                     >
                         <Text>Log in</Text>
                     </TouchableOpacity>
@@ -61,12 +66,25 @@ export default class Login extends React.Component {
             </KeyboardAvoidingView>
         );
     }
-    
-    login = () => {
-        //alert('user = ' + this.state.username + ' pass = ' + this.state.password);
-        
-        this.props.navigation.navigate('MainMenu'); 
-        
+
+    //function to login user and store user to async for faster login
+    login = (userString, passString) => {
+
+        let baseConn = new BaseConnection( IP,'3000');
+        let u = new User(baseConn);
+
+        u.login(userString, passString)
+            .then((res) => {
+
+                if(res.username != userString) {throw res}
+                AsyncStorage.setItem('user',this.state.username);
+                Keyboard.dismiss();
+                this.props.navigation.navigate('MainMenu');
+            })
+            .catch((err) => {
+                alert(err);
+            });
+
     }
 }
 
