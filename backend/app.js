@@ -7,14 +7,19 @@ const NotificationController = require('./notifications/NotificationController')
 
 app.use('/api/users', UserController);
 app.use('/api/games', GameController);
-app.use('/api/notifications', NotificationController);
+app.use('/api/notifications', NotificationController.router);
 
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 
-// app.get('/notifications', (req, res) => {
-//   res.render('notifications');
-// });
+// render some html pages for debugging
+app.get('/notifications', (req, res) => {
+  res.render('notifications');
+});
+
+app.get('/notifications/user/5acf0998cb70ea32d727b371', (req, res) => {
+  res.render('notifications-user');
+});
 
 module.exports = {
   app,
