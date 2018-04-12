@@ -9,13 +9,6 @@ export default class GameScreen extends React.Component {
         super(props);
         this.state = {
             isWinner: false,
-            tableData: [
-                [ '0', '0', '0', '0', '0'],
-                [ '0', '0', '0', '0', '0'],
-                [ '0', '0', '0', '0', '0'],
-                [ '0', '0', '0', '0', '0'],
-                [ '0', '0', '0', '0', '0']
-            ],
             region: {
                 latitude: 37.78825,
                 longitude: -122.4324,
@@ -24,12 +17,8 @@ export default class GameScreen extends React.Component {
             },
         }
     }
-    //Table States
-    //Empty: '0'
-    //Contested: '1'
-    //Host: '2'
-    //Enemy player: '3'
-    
+
+
     render(){
         const state = this.state;
         return(
@@ -58,18 +47,6 @@ export default class GameScreen extends React.Component {
         );
     }
     
-    //function to convert table state to table style color
-    tableStyle = (data) => {
-        if(data = '0')
-            return {color:'#fffaf0'};
-        if(data = '1')
-            return {color:'#808080'};
-        if(data = '2')
-            return {color:'#1aa9d8'};
-        if(data = '3')
-            return {color:'#d81919'};    
-    }
-    
     endGame = () => {
         //alert('ending game');
         this.props.navigation.navigate('GameOver', {isWinner: this.state.isWinner});
@@ -79,7 +56,6 @@ export default class GameScreen extends React.Component {
 
 const styles = StyleSheet.create({
     wrapper: { flex: 1},
-    container: { flex: 0.8, padding: 16, paddingTop: 30, backgroundColor: '#fff' },
     head: { height: 40, backgroundColor: '#f1f8ff' },
     text: { margin: 6 },
     menuContainer: {
@@ -97,7 +73,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 20,
     },
+    container: {
+        flex: 0.8,
+        padding: 16,
+        paddingTop: 30,
+        backgroundColor: '#fff'
+    },
     map: {
-    
+        ...StyleSheet.absoluteFillObject,
     },
 });
