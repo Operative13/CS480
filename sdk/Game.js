@@ -10,8 +10,8 @@ export default class Game {
     this._url = `${baseConnection.baseUrl}/api/games`;
   }
 
-  _updateInfo(gameDocumentJson) {
-    if (gameDocumentJson.id) this.id = gameDocumentJson.id;
+  _updateGame(gameDocumentJson) {
+    if (gameDocumentJson.id) this.id = gameDocumentJson._id;
     if (gameDocumentJson.name) this.name = gameDocumentJson.name;
     if (gameDocumentJson.players) this.players = gameDocumentJson.players;
     if (gameDocumentJson.geolocations) this.geolocations = gameDocumentJson.geolocations;
@@ -51,7 +51,7 @@ export default class Game {
           response.json()
             .then((jsonString) => {
               let json = JSON.parse(jsonString);
-              this._updateInfo(json);
+              this._updateGame(json);
               resolve(json);
             })
             .catch(err => reject(err))
@@ -66,7 +66,8 @@ export default class Game {
    * @param myUserId
    * @param gameName
    * @param usernameToJoin
-   * @returns {Promise<any>}
+   * @returns {Promise<any>} resolve contains an object from response body
+   *  reject contains an error
    */
   join(myUserId, gameName, usernameToJoin) {
     let requestInfo = {
@@ -90,7 +91,7 @@ export default class Game {
           response.json()
             .then((jsonString) => {
               let json = JSON.parse(jsonString);
-              this._updateInfo(json);
+              this._updateGame(json);
               resolve(json);
             })
             .catch(err => reject(err))
@@ -130,7 +131,7 @@ export default class Game {
           response.json()
             .then((jsonString) => {
               let json = JSON.parse(jsonString);
-              this._updateInfo(json);
+              this._updateGame(json);
               resolve(json);
             })
             .catch(err => reject(err))
@@ -139,7 +140,13 @@ export default class Game {
     })
   }
 
-  
+  /**
+   * Get the all info of a game given a gameId. Defaults to using this.id
+   * for the gameId if none is given
+   * @param {string} gameId
+   * @returns {Promise<any>} resolve contains an object from response body
+   *  reject contains an error
+   */
   getGame(gameId) {
     if (!gameId) gameId = this.id;
 
@@ -152,13 +159,12 @@ export default class Game {
               Accept: 'application/json',
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify(requestInfo),
         })
         .then((response) => {
           response.json()
             .then((jsonString) => {
               let json = JSON.parse(jsonString);
-              this._updateInfo(json);
+              this._updateGame(json);
               resolve(json);
             })
             .catch(err => reject(err))
