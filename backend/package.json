@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "redis-server & nodemon server.js",
+    "start": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -15,10 +15,8 @@
     "commander": "^2.15.1",
     "ejs": "^2.5.8",
     "express": "^4.16.2",
-    "express-eventstream": "^2.0.0",
     "express-ws": "^3.0.0",
-    "mongoose": "^5.0.1",
-    "redis": "^2.8.0"
+    "mongoose": "^5.0.1"
   },
   "devDependencies": {
     "jest": "^22.4.3",

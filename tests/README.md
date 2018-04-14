@@ -10,10 +10,6 @@ running of the tests was done on Win10.
 - mongod (mongodb-server)
 - mocha
 
-### Potential Requirements
-
-- redis (only if you use /api/notifications/*)
-
 ## Install Requirements
 
 #### Ubuntu 16.04
@@ -28,8 +24,8 @@ sudo apt-get install -y mongodb-org
 # nodejs
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 
-# install redis, nodejs, mocha
-sudo apt install -y redis-server nodejs mocha
+# install nodejs, mocha
+sudo apt install -y nodejs mocha
 
 # from directory: CS480/tests
 npm i
@@ -64,9 +60,6 @@ sudo mongod
 
 should be fine, might need to install the equivalent of the debian packages
 mongodb-core, mongodb-server, mongodb-clients
-
-might need to install redis-server equivalent
-
 
 ## Run
 
