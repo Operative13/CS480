@@ -25,7 +25,7 @@ export default class Login extends React.Component {
 
     _loadInitialState = async () => {
 
-        var value = await AsyncStorage.getItem('user');
+        var value = await AsyncStorage.getItem('_id');
         if (value != null){
             this.props.navigation.navigate('MainMenu');
         }
@@ -44,6 +44,7 @@ export default class Login extends React.Component {
                         underlineColorAndroid='transparent'
                     />
                     <TextInput
+                        secureTextEntry = {true}
                         style={styles.textInput} placeholder='Password'
                         onChangeText={ (password) => this.setState({password})}
                         underlineColorAndroid='transparent'
@@ -80,7 +81,7 @@ export default class Login extends React.Component {
             .then((res) => {
 
                 if(res.username != userString) {throw res}
-                AsyncStorage.setItem('user',this.state.username);
+                AsyncStorage.setItem('_id',res._id);
                 Keyboard.dismiss();
                 this.props.navigation.navigate('MainMenu');
             })

@@ -1,9 +1,5 @@
 import fetch from 'node-fetch';
 
-/**
- * Represents a lobby or session of a game instance and all of the information
- * about the game (user ids, user geolocations)
- */
 export default class Game {
   constructor(baseConnection) {
     this.id = null;
@@ -53,8 +49,7 @@ export default class Game {
         })
         .then((response) => {
           response.json()
-            .then((jsonString) => {
-              let json = JSON.parse(jsonString);
+            .then((json) => {
               this._updateGame(json);
               resolve(json);
             })
@@ -93,8 +88,7 @@ export default class Game {
         })
         .then((response) => {
           response.json()
-            .then((jsonString) => {
-              let json = JSON.parse(jsonString);
+            .then((json) => {
               this._updateGame(json);
               resolve(json);
             })
@@ -133,8 +127,7 @@ export default class Game {
         })
         .then((response) => {
           response.json()
-            .then((jsonString) => {
-              let json = JSON.parse(jsonString);
+            .then((json) => {
               this._updateGame(json);
               resolve(json);
             })
@@ -166,8 +159,7 @@ export default class Game {
         })
         .then((response) => {
           response.json()
-            .then((jsonString) => {
-              let json = JSON.parse(jsonString);
+            .then((json) => {
               this._updateGame(json);
               resolve(json);
             })
