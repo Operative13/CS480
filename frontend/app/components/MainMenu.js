@@ -31,7 +31,7 @@ export default class MainMenu extends React.Component {
     } 
 
     logout = () =>{
-        AsyncStorage.removeItem('user');
+        AsyncStorage.removeItem('_id');
         this.props.navigation.goBack();
     }
 }

@@ -1,7 +1,20 @@
 import React from 'react';
-import {StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpacity, Keyboard} from 'react-native';
+import {
+    StyleSheet,
+    Text,
+    View,
+    TextInput,
+    KeyboardAvoidingView,
+    TouchableOpacity,
+    Keyboard,
+    AsyncStorage,
+} from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 
+import BaseConnection from 'kingdoms-game-sdk/BaseConnection';
+import Game from 'kingdoms-game-sdk/Game';
+
+import IP from '../../config';
 
 export default class GameSearch extends React.Component {
     
@@ -10,8 +23,42 @@ export default class GameSearch extends React.Component {
         this.state = {
             newRoomName: '',
             joinRoomName: '',
-            joinUserName: ''
+            joinUserName: '',
+            userID: null,
+            lat: null,
+            lon: null,
+            error: null,
+
         }
+    }
+
+    componentDidMount(){
+        this._loadInitialState().done();
+    }
+
+    _loadInitialState = async () => {
+
+        //get id
+        var value = await AsyncStorage.getItem('_id');
+        if (value == null){
+            alert('error getting user ID');
+            this.props.navigation.pop(1);
+        }
+        this.state.userID = value;
+
+        //get location
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                this.setState({
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude,
+                    error: null,
+                });
+            },
+            (error) => this.setState({ error: error.message }),
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+        );
+
     }
     
     render(){
@@ -28,7 +75,7 @@ export default class GameSearch extends React.Component {
                     />
                     <TouchableOpacity
                         style={styles.btn}
-                        onPress={this.createRoom}
+                        onPress={() => this.createRoom(this.state.newRoomName)}
                     >
                         <Text>Create New Room</Text>
                     </TouchableOpacity>
@@ -40,7 +87,7 @@ export default class GameSearch extends React.Component {
                     />
                     <TouchableOpacity
                         style={styles.btn}
-                        onPress={ this.joinRoomByName}
+                        onPress={ () => this.joinRoomByName(this.state.joinRoomName)}
                     >
                         <Text>Join Room Name</Text>
                     </TouchableOpacity>
@@ -52,7 +99,7 @@ export default class GameSearch extends React.Component {
                     />
                     <TouchableOpacity
                         style={styles.btn}
-                        onPress={this.joinRoomByUser}
+                        onPress={() => this.joinRoomByUser(this.state.joinUserName)}
                     >
                         <Text>Join Username</Text>
                     </TouchableOpacity>
@@ -65,22 +112,59 @@ export default class GameSearch extends React.Component {
         );
     }   
     
-    createRoom = () => {
+    createRoom = (roomName) => {
         //alert('creating room');
-        Keyboard.dismiss();
-        this.props.navigation.navigate('GameScreen');
+        let baseConn = new BaseConnection( IP ,'3000');
+        let game = new Game(baseConn);
+
+        game.create(roomName,this.state.userID,this.state.lat,this.state.lon)
+            .then((res) => {
+                //if(res.gameName != roomName) {throw res};
+                Keyboard.dismiss();
+                this.props.navigation.navigate('GameScreen');
+            })
+            .catch((err) => {
+                Keyboard.dismiss();
+                alert(err);
+            });
+
+
     }
     
-    joinRoomByName = () => {
+    joinRoomByName = (gameName) => {
         //alert('joining by room name');
-        Keyboard.dismiss();
-        this.props.navigation.navigate('GameScreen');
+        let baseConn = new BaseConnection( IP ,'3000');
+        let game = new Game(baseConn);
+
+        game.join(this.state.userID, gameName)
+            .then((res) => {
+                //if(res.gameName != gameName) {throw res};
+                Keyboard.dismiss();
+                this.props.navigation.navigate('GameScreen');
+            })
+            .catch((err) => {
+                Keyboard.dismiss();
+                alert(err);
+            });
+
     }
     
-    joinRoomByUser = () => {
+    joinRoomByUser = (joinUserName) => {
         //alert('join by user name');
-        Keyboard.dismiss();
-        this.props.navigation.navigate('GameScreen');
+        let baseConn = new BaseConnection( IP ,'3000');
+        let game = new Game(baseConn);
+
+        game.join(this.state.userID, null, joinUserName)
+            .then((res) => {
+                //if(res.username != joinUserName) {throw res};
+                Keyboard.dismiss();
+                this.props.navigation.navigate('GameScreen');
+            })
+            .catch((err) => {
+                Keyboard.dismiss();
+                alert(err);
+            });
+
     }
 }
 

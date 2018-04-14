@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, AsyncStorage,} from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 import MapView from 'react-native-maps';
 
@@ -20,7 +20,7 @@ export default class GameScreen extends React.Component {
 
 
     render(){
-        const state = this.state;
+
         return(
             <View style={styles.wrapper}>
                 <View style={styles.container}>
