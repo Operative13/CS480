@@ -14,6 +14,7 @@ const {
 } = require('../exceptions/exceptions.js');
 const UserFunctions = require('../users/UserFunctions');
 const { joinGame, joinGameByName } = require('./GameFunctions');
+const GameFunctions = require('./GameFunctions');
 
 /**
  * Send all games
@@ -81,7 +82,7 @@ router.post('/create', async function (req, res) {
  */
 router.post('/join', async (req, res) => {
   // validate users id given
-  if (!UserFunctions.isUser(req.body.myUserId)) {
+  if (await !UserFunctions.isUser(req.body.myUserId)) {
     return res
       .status(400)
       .send(`Invalid user._id from myUserId = ${req.body.myUserId}`);
@@ -121,6 +122,25 @@ router.post('/join', async (req, res) => {
     return res.status(400).send('Need to specify a username or games name to ' +
       'search for to join');
   }
+});
+
+/**
+ * Have the given user of userId leave the game
+ * request body should contain:
+ * {
+ *  userId: String,
+ * }
+ */
+router.post('/leave/:id', (req, res) => {
+  Game.findById(req.params.id, function (err, game) {
+    if (err) return res.status(500).send(err.message);
+    if (!game) return res.status(404).send("No games found.");
+    if (!req.body.userId) res.status(400).send('no userId given');
+
+    GameFunctions.removeUser(game, req)
+      .then((game) => res.status(200).send(game))
+      .catch(err => res.status(500).send(err));
+  });
 });
 
 /**

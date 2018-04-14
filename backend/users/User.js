@@ -22,7 +22,7 @@ const UserSchema = new mongoose.Schema({
     // TODO: could significantly slow down server at least during users creation
     default: `${crypto.randomFillSync(Buffer.alloc(10)).toString('hex')}@fake.email.com`,
 
-    unique: [true, 'Email is not unique within data base'],
+    // unique: [true, 'Email is not unique within data base'],
   },
 
   password: {
