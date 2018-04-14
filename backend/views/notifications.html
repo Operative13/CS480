@@ -2,22 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-    <script type="text/javascript">
-        let source = new EventSource('/api/notifications');
-
-        source.onerror = (event) => {
-          console.error(event);
+    <title>ws</title>
+    <script type="application/javascript">
+        var exampleSocket = new WebSocket("ws://localhost:3000/api/notifications");
+        exampleSocket.onopen = function() {
+          exampleSocket.send('hello from client');
         };
-        source.onmessage = (event) => {
-          console.log(event);
-        };
-        source.onopen = (event) => {
-          console.log(event);
-        };
-        // source.addEventListener('message', function(event) {
-        //     console.log(event);
-        // });
+        exampleSocket.onmessage = (msg) => {
+          console.log(msg);
+        }
     </script>
 </head>
 <body>

@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+require('express-ws')(app);
 
 const UserController = require('./users/UserController');
 const GameController = require('./games/GameController');
@@ -22,5 +23,5 @@ app.get('/notifications/user/5acf0998cb70ea32d727b371', (req, res) => {
 });
 
 module.exports = {
-  app,
+  app
 };
