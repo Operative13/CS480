@@ -1,5 +1,9 @@
 import fetch from 'node-fetch';
 
+/**
+ * Represents a lobby or session of a game instance and all of the information
+ * about the game (user ids, user geolocations)
+ */
 export default class Game {
   constructor(baseConnection) {
     this.id = null;
