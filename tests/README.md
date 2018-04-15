@@ -1,5 +1,7 @@
 # CS480/tests
 
+**See CS480/sdk/test.js**
+
 Contains our unit tests for everything. The following instructions are intended
 for Linux (Debian variants), and some additional instructions and initial
 running of the tests was done on Win10.

@@ -72,7 +72,6 @@ module.exports = class User {
           response.json()
             .then((json) => {
               this._updateUser(json._id, json.username, json.email);
-              console.info(`created new user:\n${this.toString()}`);
               resolve(json);
             })
             .catch(err => {console.error(err); reject(err)});
