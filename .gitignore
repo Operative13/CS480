@@ -1,5 +1,7 @@
 ####### CS480 - OUR PERSONAL IGNORES ######
 config.js
+config*.js
+mongodb_shell*.sh
 package-lock.json
 
 

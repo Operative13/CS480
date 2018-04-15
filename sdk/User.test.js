@@ -1,5 +1,5 @@
-import BaseConnection from './BaseConnection';
-import User from './User';
+import BaseConnection from './src/BaseConnection';
+import User from './src/User';
 
 let conn = new BaseConnection('localhost', '3000');
 let user = new User(conn);

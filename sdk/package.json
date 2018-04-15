@@ -1,6 +1,6 @@
 {
   "name": "kingdoms-game-sdk",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "A REST API wrapper for the kingdoms-game backend",
   "repository": {
     "type": "git",
@@ -17,6 +17,8 @@
     "node-fetch": "^2.1.2"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0"
+    "babel": "^6.23.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
   }
 }

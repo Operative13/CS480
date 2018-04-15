@@ -6,7 +6,7 @@ const {
   BackendException
 } = require('../exceptions/exceptions');
 
-module.exports = {joinGame, joinGameByName};
+module.exports = {joinGame, joinGameByName, removeUser};
 
 /**
  * Attempts to put the users in a games room
@@ -98,4 +98,47 @@ function addPlayerToGame(game, userInfo) {
   game.markModified('geolocations');
   game.save();
   return game;
+}
+
+/**
+ * Removes a user from a game given the game document and the userId in the
+ * body of the request (from req.body.userId)
+ * @param game
+ * @param req
+ * @returns {Promise} resolves or rejects with value to be sent with response
+ */
+function removeUser(game, req) {
+  return new Promise((resolve, reject) => {
+    delete game.geolocations[req.body.userId];
+    // we're actually comparing a String and an ObjectId
+    let removeIndex = game.users.findIndex((userId) => userId == req.body.userId);
+    if (removeIndex === -1) reject('could not find that user in list of users for this game');
+
+    // remove the userId from the array of userIds
+    let begin = game.users.slice(0, removeIndex);
+    let end = game.users.slice(removeIndex + 1, game.users.length + 1);
+    game.users = begin.concat(end);
+
+    // no more users in this game
+    if (!game.users.length) {
+      deleteGame(game._id)
+        .then(() => resolve(game))
+        .catch(err => reject(err))
+    } else {
+      game.markModified('geolocations');
+      game.save()
+        .then(savedGame => resolve(savedGame))
+        .catch(err => reject(err.message));
+    }
+  });
+}
+
+function deleteGame(gameId) {
+  return new Promise((resolve, reject) => {
+    Game.remove({_id: gameId}, (err, game) => {
+      if (err) reject(err);
+      if (!game) reject('game not found');
+      resolve(game);
+    });
+  });
 }

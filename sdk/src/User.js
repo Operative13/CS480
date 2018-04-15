@@ -1,10 +1,11 @@
+// const fetch = import('node-fetch');
 import fetch from 'node-fetch';
 
 /**
  * Represents a single users and allows for access to backend REST API
  * UserController where /api/users routes are defined
  */
-export default class User {
+module.exports = class User {
 
   /**
    * @param {BaseConnection} baseConnection

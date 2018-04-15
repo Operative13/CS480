@@ -1,8 +1,8 @@
 const { call } = require('../backend/utility/shell');
 const port = '3000';
 const UserModel = new require('../backend/users/User');
-const BaseConnection = require('../sdk/BaseConnection');
-const UserSdk = require('../sdk/User');
+const BaseConnection = require('../sdk/src/BaseConnection');
+const UserSdk = require('../sdk/src/User');
 const assert = require('assert');
 
 //call('hostname -I').then((host) => {

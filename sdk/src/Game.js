@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-export default class Game {
+module.exports = class Game {
   constructor(baseConnection) {
     this.id = null;
     this.name = null;

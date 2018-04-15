@@ -27,3 +27,9 @@ user.create('usernamer123', 'password')
 Do note that the methods that call the REST API from all of the classes 
 are async and return a Promise that whose resolve should contain the JSON
 from the http response body. 
+
+
+## Tests
+
+Write some test files to use files generated and saved to lib/ folder by
+`npm run build`

@@ -85,7 +85,6 @@ export default class RegisterPage extends React.Component {
             .catch((err) => {
                 alert(err);
             });
-
     }
     
     
