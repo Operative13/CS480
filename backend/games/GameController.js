@@ -58,8 +58,8 @@ router.post('/create', function(req, res) {
           let playerInfo = {
             // use myUserId, or if not truthy, use other one
             myUserId: req.body.myUserId || req.body.userId,
-            lat: req.body.lat || null,
-            lon: req.body.lon || null,
+            lat: req.body.lat || 0,
+            lon: req.body.lon || 0,
           };
           // player created and is added to this games room or he is just added to
           // this games room
@@ -165,13 +165,16 @@ router.get('/:id', function(req, res) {
  */
 router.post('/:id', function(req, res) {
   Game.findOne({_id: req.params.id}, function(err, game) {
+    if (err) return res.status(500).send(`no such game ${req.params.id}`);
     try {
       if (!game.geolocations[req.body.myUserId]) {
-        console.error(`user._id ${req.body.myUserId} not found in game room`);
+        return res.status(400).send(`user._id ${req.body.myUserId} not found in game room`);
       }
 
       game.geolocations[req.body.myUserId]['lat'] = req.body.lat;
       game.geolocations[req.body.myUserId]['lon'] = req.body.lon;
+
+      game.markModified('geolocations');
       game.save();
     } catch (error) {
       return res.status(400).send(error.message);
