@@ -139,6 +139,6 @@ function deleteGame(gameId) {
       if (err) reject(err);
       if (!game) reject('game not found');
       resolve(game);
-    })
-  })
+    });
+  });
 }

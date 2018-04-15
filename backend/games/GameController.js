@@ -38,34 +38,36 @@ router.get('/', function(req, res) {
  *  joinIfExists: Boolean,
  * }
  */
-router.post('/create', async function (req, res) {
-  if (!UserFunctions.isUser(req.body.myUserId)) {
-    return res.status(400).send(`${req.body.myUserId} does not point to a user`);
-  }
-
-  Game.create({
-      name: req.body.name,
-    }, (err, game) => {
-      // error occurred and it's not because this games room name already exists
-      // or games was full, but we don't want to join it here
-      if (err && (err.code !== 11000 || !req.body.joinIfExists)) {
-        return res.status(500).send(err);
+router.post('/create', function(req, res) {
+  UserFunctions.isUser(req.body.myUserId)
+    .then(isUser => {
+      if (!isUser) {
+        return res.status(400).send(`${req.body.myUserId} does not point to a user`);
       }
-      // room already exists, but try to join this existing room
-      // or the games was just created
-      else if (game || (err && req.body.joinIfExists)) {
-        let playerInfo = {
-          // use myUserId, or if not truthy, use other one
-          myUserId: req.body.myUserId || req.body.userId,
-          lat: req.body.lat || null,
-          lon: req.body.lon || null,
-        };
-        // player created and is added to this games room or he is just added to
-        // this games room
-        return joinGameByName(req.body.name, playerInfo, res);
-      }
-      return res.status(500).send('creating games room screwed up');
-  });
+      Game.create({
+        name: req.body.name,
+      }, (err, game) => {
+        // error occurred and it's not because this games room name already exists
+        // or games was full, but we don't want to join it here
+        if (err && (err.code !== 11000 || !req.body.joinIfExists)) {
+          return res.status(500).send(err);
+        }
+        // room already exists, but try to join this existing room
+        // or the games was just created
+        else if (game || (err && req.body.joinIfExists)) {
+          let playerInfo = {
+            // use myUserId, or if not truthy, use other one
+            myUserId: req.body.myUserId || req.body.userId,
+            lat: req.body.lat || null,
+            lon: req.body.lon || null,
+          };
+          // player created and is added to this games room or he is just added to
+          // this games room
+          return joinGameByName(req.body.name, playerInfo, res);
+        }
+        return res.status(500).send('creating games room screwed up');
+      });
+    })
 });
 
 /**
@@ -81,47 +83,48 @@ router.post('/create', async function (req, res) {
  * like to join
  */
 router.post('/join', async (req, res) => {
-  // validate users id given
-  if (await !UserFunctions.isUser(req.body.myUserId)) {
-    return res
-      .status(400)
-      .send(`Invalid user._id from myUserId = ${req.body.myUserId}`);
-  }
+  UserFunctions.isUser(req.body.myUserId)
+    .catch(err => res.status(500).send(err))
+    .then(isUser => {
+      if (!isUser) return res.status(400).send(`no such user: ${req.body.myUserId}`);
+      let userInfo = {myUserId: req.body.myUserId, lat: null, lon: null};
 
-  let userInfo = {myUserId: req.body.myUserId, lat: null, lon: null};
-
-  // games room name to join was provided by requester
-  if (req.body.gameName) {
-    Game.findOne({'name': req.body.gameName}, (err, game) => {
-      if (err) return res.status(500).send(err);
-      return joinGame(game, userInfo, res);
-    });
-  }
-  // username to join was provided by requester
-  else if (req.body.username) {
-    let userIdToJoin = await UserFunctions.getUserId(req.body.username);
-    // given username to join isn't a users at all
-    if (!userIdToJoin) {
-      return res
-        .status(400)
-        .send(`Could not find user with username = ${req.body.username}`);
-    }
-
-    // wait for the query and callback to complete
-    await Game.findOne(
-      // janky JS syntax to allow for an expression to be used as a key
-      {[`geolocations.${userIdToJoin}`]: {$exists: true}},
-      (err, game) => {
-        if (err) return res.status(500).send(err);
-        return joinGame(game, userInfo, res);
+      // games room name to join was provided by requester
+      if (req.body.gameName) {
+        Game.findOne({'name': req.body.gameName}, (err, game) => {
+          if (err) return res.status(500).send(err);
+          return joinGame(game, userInfo, res);
+        });
       }
-    );
-  }
-  // no username or gameName was provided in request body
-  else {
-    return res.status(400).send('Need to specify a username or games name to ' +
-      'search for to join');
-  }
+
+      // username to join was provided by requester
+      else if (req.body.username) {
+        UserFunctions.getUserId(req.body.username)
+          .then(userIdToJoin => {
+            // given username to join isn't a users at all
+            if (!userIdToJoin) {
+              return res
+                .status(400)
+                .send(`Could not find user with username = ${req.body.username}`);
+            }
+
+            // wait for the query and callback to complete
+            Game.findOne(
+              // janky JS syntax to allow for an expression to be used as a key
+              {[`geolocations.${userIdToJoin}`]: {$exists: true}},
+              (err, game) => {
+                if (err) return res.status(500).send(err);
+                return joinGame(game, userInfo, res);
+              }
+            );
+          })
+      }
+      // no username or gameName was provided in request body
+      else {
+        return res.status(400).send('Need to specify a username or games name to ' +
+          'search for to join');
+      }
+    });
 });
 
 /**
