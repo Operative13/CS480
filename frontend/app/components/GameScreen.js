@@ -2,6 +2,12 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, AsyncStorage,} from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 import MapView from 'react-native-maps';
+import {Marker} from 'react-native-maps';
+
+import BaseConnection from 'kingdoms-game-sdk/BaseConnection';
+import Game from 'kingdoms-game-sdk/Game';
+
+import IP from '../../config';
 
 export default class GameScreen extends React.Component {
     
@@ -15,11 +21,33 @@ export default class GameScreen extends React.Component {
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
             },
+            lat: null,
+            lon: null,
+            error: null,
         }
+
     }
 
+    getGeolocation() {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                alert(position.coords.latitude);
+                this.setState({
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude,
+                    error: null,
+                });
+            },
+            (error) => this.setState({ error: error.message }),
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+        );
+    }
 
     render(){
+
+        const {params} = this.props.navigation.state;
+        var game = params.gameInstance;
+        //alert(game);
 
         return(
             <View style={styles.wrapper}>
