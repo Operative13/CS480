@@ -28,8 +28,8 @@ export default class GameSearch extends React.Component {
             lat: null,
             lon: null,
             error: null,
-
         }
+
     }
 
     componentDidMount(){
@@ -40,15 +40,25 @@ export default class GameSearch extends React.Component {
 
         //get id
         var value = await AsyncStorage.getItem('_id');
+        //return to menu on error
         if (value == null){
             alert('error getting user ID');
             this.props.navigation.pop(1);
         }
         this.state.userID = value;
-
         //get location
+        this.getGeolocation();
+        //return to menu on error
+        if(this.state.error != null){
+            alert(this.state.error);
+            this.props.navigation.pop(1);
+        }
+    }
+
+    getGeolocation() {
         navigator.geolocation.getCurrentPosition(
             (position) => {
+                alert(position.coords.latitude);
                 this.setState({
                     lat: position.coords.latitude,
                     lon: position.coords.longitude,
@@ -58,7 +68,6 @@ export default class GameSearch extends React.Component {
             (error) => this.setState({ error: error.message }),
             { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
         );
-
     }
     
     render(){
@@ -114,14 +123,15 @@ export default class GameSearch extends React.Component {
     
     createRoom = (roomName) => {
         //alert('creating room');
-        let baseConn = new BaseConnection( IP ,'3000');
-        let game = new Game(baseConn);
+        var baseConn = new BaseConnection( IP ,'3000');
+        var game = new Game(baseConn);
 
         game.create(roomName,this.state.userID,this.state.lat,this.state.lon)
             .then((res) => {
                 //if(res.gameName != roomName) {throw res};
                 Keyboard.dismiss();
-                this.props.navigation.navigate('GameScreen');
+                alert(res.name);
+                this.props.navigation.navigate('GameScreen', {gameInstance: game});
             })
             .catch((err) => {
                 Keyboard.dismiss();
@@ -133,8 +143,8 @@ export default class GameSearch extends React.Component {
     
     joinRoomByName = (gameName) => {
         //alert('joining by room name');
-        let baseConn = new BaseConnection( IP ,'3000');
-        let game = new Game(baseConn);
+        var baseConn = new BaseConnection( IP ,'3000');
+        var game = new Game(baseConn);
 
         game.join(this.state.userID, gameName)
             .then((res) => {
@@ -151,8 +161,8 @@ export default class GameSearch extends React.Component {
     
     joinRoomByUser = (joinUserName) => {
         //alert('join by user name');
-        let baseConn = new BaseConnection( IP ,'3000');
-        let game = new Game(baseConn);
+        var baseConn = new BaseConnection( IP ,'3000');
+        var game = new Game(baseConn);
 
         game.join(this.state.userID, null, joinUserName)
             .then((res) => {
