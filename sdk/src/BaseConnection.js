@@ -3,7 +3,7 @@
  * each class in sdk/ will need to know where to send http requests at the
  * very least
  */
-export default class BaseConnection {
+module.exports = class BaseConnection {
   /**
    * Creates the URL using the given values
    * @param domain
@@ -19,4 +19,4 @@ export default class BaseConnection {
   toString() {
     return this.baseUrl;
   }
-}
+};

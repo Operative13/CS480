@@ -79,7 +79,6 @@ export default class Login extends React.Component {
 
         u.login(userString, passString)
             .then((res) => {
-
                 if(res.username != userString) {throw res}
                 AsyncStorage.setItem('_id',res._id);
                 Keyboard.dismiss();
