@@ -21,10 +21,49 @@ export default class GameScreen extends React.Component {
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
             },
+            userID: null,
+            gameID: '',
             lat: null,
             lon: null,
             error: null,
+        };
+        //initial game id
+        const {params} = this.props.navigation.state;
+        this.state.gameID = params.gameID;
+
+        let baseConn = new BaseConnection( IP ,'3000');
+        this.game = new Game(baseConn);
+        //get gameInstance
+        if(this.state.gameID === '' || this.state.gameID === null || this.state.gameID === undefined){
+            alert('error getting game ID');
+            this.props.navigation.pop(1);
         }
+        this.game.getGame(this.state.gameID)
+            .then((response) => {
+
+            })
+            .catch((err) =>{
+                alert('getGame' + err);
+            });
+
+        //update geolocation of player and game
+        //this.updateGeolocation();
+        //setInterval(this.updateGeolocation(), 5000);
+    }
+
+    componentDidMount(){
+        this._loadInitialState().done();
+    }
+
+    _loadInitialState = async () => {
+        //get id
+        let value = await AsyncStorage.getItem('_id');
+        //return to menu on error
+        if (value == null){
+            alert('error getting user ID');
+            this.props.navigation.pop(1);
+        }
+        this.state.userID = value;
 
     }
 
@@ -43,12 +82,18 @@ export default class GameScreen extends React.Component {
         );
     }
 
+    updateGeolocation(){
+        this.getGeolocation();
+        this.game.setGeolocation(this.state.userID,this.state.lon,this.state.lat)
+            .then((response) => {
+
+            })
+            .catch((err) =>{
+                alert(this.state.userID + this.state.lon + this.state.lat + 'updateGeolocation' + err);
+            });
+    }
+
     render(){
-
-        const {params} = this.props.navigation.state;
-        var game = params.gameInstance;
-        //alert(game);
-
         return(
             <View style={styles.wrapper}>
                 <View style={styles.container}>
