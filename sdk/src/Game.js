@@ -11,7 +11,7 @@ module.exports = class Game {
   }
 
   _updateGame(gameDocumentJson) {
-    if (gameDocumentJson.id) this.id = gameDocumentJson._id;
+    if (gameDocumentJson._id) this.id = gameDocumentJson._id;
     if (gameDocumentJson.name) this.name = gameDocumentJson.name;
     if (gameDocumentJson.players) this.players = gameDocumentJson.players;
     if (gameDocumentJson.geolocations) this.geolocations = gameDocumentJson.geolocations;

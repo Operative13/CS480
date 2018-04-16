@@ -15,6 +15,8 @@ const {
 const UserFunctions = require('../users/UserFunctions');
 const { joinGame, joinGameByName } = require('./GameFunctions');
 const GameFunctions = require('./GameFunctions');
+const asJsonString = require('../utility/general').asJsonString;
+const asJson = require('../utility/general').asJson;
 
 /**
  * Send all games
@@ -42,7 +44,7 @@ router.post('/create', function(req, res) {
   UserFunctions.isUser(req.body.myUserId)
     .then(isUser => {
       if (!isUser) {
-        return res.status(400).send(`${req.body.myUserId} does not point to a user`);
+        return res.status(400).json(asJson(`${req.body.myUserId} does not point to a user`, 'error'));
       }
       Game.create({
         name: req.body.name,

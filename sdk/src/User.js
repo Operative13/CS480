@@ -1,4 +1,3 @@
-// const fetch = import('node-fetch');
 import fetch from 'node-fetch';
 
 /**
