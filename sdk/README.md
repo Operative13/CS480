@@ -14,8 +14,8 @@ the REST API defined in the backend of our game, kingdoms-game.
 ## Usage
 
 ```
-import BaseConnection from 'kingdoms-game-sdk/BaseConnection';
-import User from 'kingdoms-game-sdk/User';
+import BaseConnection from 'kingdoms-game-sdk/src/BaseConnection';
+import User from 'kingdoms-game-sdk/src/User';
 
 let conn = new BaseConnection('localhost', '3000');
 let user = new User(conn);
@@ -31,5 +31,18 @@ from the http response body.
 
 ## Tests
 
-Write some test files to use files generated and saved to lib/ folder by
-`npm run build`
+It's best to have the entire repo locally on your pc so `git clone` this
+and `cd CS480/sdk`
+
+To run the tests:
+
+1. `npm run build` to use babel to transform from es6 to nodejs for 
+compatibility
+2. `nodemon ../backend/server.js --host localhost --mongodb-uri mongodb://localhost &`
+to run the server
+3. `npm test` to run the tests
+
+I have a db hosted on mlab.com for our testing called cs480-tests.
+Steps 1-2 can be done by running `setup_server.sh` which is derived from 
+`example.setup_servers.sh`. See the google shared folder I sent out which 
+contains all the configs I'm using for easier setup here.
