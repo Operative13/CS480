@@ -125,9 +125,9 @@ export default class GameSearch extends React.Component {
         let baseConn = new BaseConnection( IP ,'3000');
         let game = new Game(baseConn);
 
-        game.create(roomName,this.state.userID,this.state.lat,this.state.lon,)
+        game.create(roomName,this.state.userID,this.state.lat,this.state.lon,true)
             .then((res) => {
-                if(res.name != roomName) {throw res};
+                //if(res.name != roomName) {throw res};
                 //alert(res._id);
                 Keyboard.dismiss();
                 this.props.navigation.navigate('GameScreen', {gameID: res._id});
@@ -149,7 +149,7 @@ export default class GameSearch extends React.Component {
             .then((res) => {
                 //if(res.gameName != gameName) {throw res};
                 Keyboard.dismiss();
-                this.props.navigation.navigate('GameScreen');
+                this.props.navigation.navigate('GameScreen', {gameID: res._id});
             })
             .catch((err) => {
                 Keyboard.dismiss();
@@ -167,7 +167,7 @@ export default class GameSearch extends React.Component {
             .then((res) => {
                 //if(res.username != joinUserName) {throw res};
                 Keyboard.dismiss();
-                this.props.navigation.navigate('GameScreen');
+                this.props.navigation.navigate('GameScreen', {gameID: res._id});
             })
             .catch((err) => {
                 Keyboard.dismiss();
