@@ -5,8 +5,7 @@ const {
   RequestRejectedException,
   BackendException
 } = require('../exceptions/exceptions');
-
-module.exports = {joinGame, joinGameByName, removeUser};
+const UserFunctions = require('../users/UserFunctions');
 
 /**
  * Attempts to put the users in a games room
@@ -23,7 +22,7 @@ module.exports = {joinGame, joinGameByName, removeUser};
  * @param error an error or exception passed from a callback or promise
  * @returns {undefined, Response}
  */
-function joinGame(game, userInfo, httpResponse, error) {
+function joinGame(game, userInfo, httpResponse, error, leavePreviousGame=true) {
     if (error) return httpResponse.status(500).send(error);
     if (!game) {
       return httpResponse
@@ -32,7 +31,7 @@ function joinGame(game, userInfo, httpResponse, error) {
     }
 
     try {
-      game = addPlayerToGame(game, userInfo);
+      game = addUser(game, userInfo);
     } catch (error) {
         if (error instanceof RequestRejectedException) {
           // room was full already
@@ -41,7 +40,7 @@ function joinGame(game, userInfo, httpResponse, error) {
         // server error encountered
         return httpResponse.status(500).send(error.message);
     }
-    // successfully joined the games room
+    // successfully joined the game room
     return httpResponse.status(200).send(game);
 }
 
@@ -72,7 +71,7 @@ function joinGameByName(gameName, userInfo, httpResponse) {
  * @param {Object} userInfo contains the following keys: userId, lat, lon
  * @returns {mongoose.Document} games with updated value for users, gets saved
  */
-function addPlayerToGame(game, userInfo) {
+async function addUser(game, userInfo) {
   // if games room is at capacity
   if (game.users.length >= GameConfig.maxUsers ||
     (game.geolocations && Object.keys(game.geolocations).length >= GameConfig.maxUsers)) {
@@ -87,32 +86,43 @@ function addPlayerToGame(game, userInfo) {
       `${JSON.stringify(game, null, 2)}\ngeolocations not found in Game document`);
   }
 
-  game.users.push(userInfo.myUserId);
-  game.geolocations[userInfo.myUserId] = {
-    lat: userInfo.lat,
-    lon: userInfo.lon
+  let addUserIn = () => {
+    game.users.push(userInfo.myUserId);
+    game.geolocations[userInfo.myUserId] = {
+      lat: userInfo.lat,
+      lon: userInfo.lon
+    };
+
+    // required when modifying and saving value(s) of a property of type Mixed
+    // or of type Object in schema
+    game.markModified('geolocations');
+    game.save();
+    return game;
   };
 
-  // required when modifying and saving value(s) of a property of type Mixed
-  // or of type Object in schema
-  game.markModified('geolocations');
-  game.save();
-  return game;
+  isUserInAGame(userInfo.userId)
+    .catch(err => {throw err})
+    .then((isInAGame, gameUserIsAlreadyIn) => {
+      if (isInAGame) {
+        removeUser(gameUserIsAlreadyIn, userInfo.userId).then(() => addUserIn());
+      } else {
+        return addUserIn();
+      }
+    });
 }
 
 /**
- * Removes a user from a game given the game document and the userId in the
- * body of the request (from req.body.userId)
+ * Removes a user from a game given the game document and the userId
  * @param game
- * @param req
+ * @param userId - id of user who is going to be removed from the game
  * @returns {Promise} resolves or rejects with value to be sent with response
  */
-function removeUser(game, req) {
+function removeUser(game, userId) {
   return new Promise((resolve, reject) => {
-    delete game.geolocations[req.body.userId];
+    delete game.geolocations[userId];
     // we're actually comparing a String and an ObjectId
-    let removeIndex = game.users.findIndex((userId) => userId == req.body.userId);
-    if (removeIndex === -1) reject('could not find that user in list of users for this game');
+    let removeIndex = game.users.findIndex((id) => id == userId);
+    if (removeIndex === -1) reject(`could not find user of id ${userId} in list of users for this game`);
 
     // remove the userId from the array of userIds
     let begin = game.users.slice(0, removeIndex);
@@ -142,3 +152,12 @@ function deleteGame(gameId) {
     });
   });
 }
+
+async function isUserInAGame(userId) {
+  Game.findOne({[`geolocations.${userId}`]: {$exists: true}}, (err, game) => {
+    if (err) throw err;
+    return [!!game, game];
+  })
+}
+
+module.exports = {joinGame, joinGameByName, removeUser};

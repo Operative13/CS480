@@ -44,7 +44,9 @@ router.post('/create', function(req, res) {
   UserFunctions.isUser(req.body.myUserId)
     .then(isUser => {
       if (!isUser) {
-        return res.status(400).json(asJson(`${req.body.myUserId} does not point to a user`, 'error'));
+        return res
+          .status(400)
+          .json(asJson(`${req.body.myUserId} does not point to a user`, 'error'));
       }
       Game.create({
         name: req.body.name,
@@ -142,7 +144,7 @@ router.post('/leave/:id', (req, res) => {
     if (!game) return res.status(404).send("No games found.");
     if (!req.body.userId) res.status(400).send('no userId given');
 
-    GameFunctions.removeUser(game, req)
+    GameFunctions.removeUser(game, req.body.userId)
       .then((game) => res.status(200).send(game))
       .catch(err => res.status(500).send(err));
   });

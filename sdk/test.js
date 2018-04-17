@@ -8,6 +8,7 @@ var UserModel = null;
 var GameModel = null;
 
 const assert = require('assert');
+const Promise = require('promise');
 
 // sdk imports
 const BaseConnection = require('./lib/BaseConnection');
@@ -15,6 +16,8 @@ const User = require('./lib/User');
 const Game = require('./lib/Game');
 const baseConnection = new BaseConnection('localhost', '3000');
 const user = new User(baseConnection);
+const user2 = new User(baseConnection);
+const user3 = new User(baseConnection);
 const game = new Game(baseConnection);
 
 /**
@@ -31,31 +34,78 @@ before(function() {
 });
 
 describe('list of users', () => {
-  it('should be equal to empty array', () => {
+  it('should be equal to empty array', (done) => {
       UserModel.find()
-        .catch(err => {
-          throw new Error(err.message)
+        .catch(err => err)
+        .then((users) => {
+          assert(users.length === 0);
         })
-        .then((users) => users === [])
+        .then(() => done(), done);
     })
 });
 
-describe('create a new user', () => {
-  it('should return the user doc (object) in the response', async () => {
+describe('create 2 new users', () => {
+  it('each should return user doc in the response', async function() {
+    // limit it to 2 seconds to finish this test
+    this.timeout(2000);
+
     let username = 'james',
         password = 'pw';
 
+    let email = 'john@email.com';
+
     // need to wait for this since we rely on using this users info for
     // next test function calls
-    await user.create(username, password)
+    let p1 = user.create(username, password)
       .then((response) => {
-        //
         assert(username === response.username);
-        assert(user.username === username);
+        assert(username === user.username);
         // console.log(user.toString());
       })
-      .catch(err => {throw new Error(err.message)})
+      .catch(err => err);
+
+    let p2 = user2.create('john', 'pw', email)
+      .then(response => {
+        // console.log(user2);
+        assert(response.email === email);
+        assert(user2.email === email);
+      })
+      .catch(err => err);
+
+    await Promise.all([p1, p2]);
+  });
+});
+
+describe('db.users', () => {
+  it('should contain two users', function() {
+    // limit it to 2 seconds to finish this test
+    this.timeout(2000);
+    UserModel.find({}, (err, users) => {
+      if (err) return done(err);
+      assert(users.length === 2);
     });
+  });
+});
+
+describe('try to create a user with a taken username', () => {
+  it('should throw an exception in the http response', function() {
+    // limit it to 2 seconds to finish this test
+    this.timeout(2000);
+
+    let username = 'james',
+      password = 'pw';
+
+    // need to wait for this since we rely on using this users info for
+    // next test function calls
+    user3.create(username, password)
+      .then((response) => {
+        console.log(response);
+        assert(username === response.username);
+        assert(username === user.username);
+        // console.log(user.toString());
+      })
+      .catch(err => err);
+  });
 });
 
 /**
@@ -69,18 +119,19 @@ describe('create a new user', () => {
  * __v: 0 }
  */
 describe('create a new game', () => {
-  it('should return the game doc in the response', () => {
+  it('should return the game doc in the response', (done) => {
     let name = 'room1',
         userId = user.id,
         lat = 123,
         lon = 123;
 
     game.create(name, userId, lat, lon)
-      .catch(err => {throw new Error(err.message)})
       .then(response => {
-        assert(response.users[0], 'something is in game.users');
+        assert(response.users && response.users[0], 'something is in game.users');
         assert(response.geolocations[userId], `${user.id} is in game.geolocations`);
       })
+      .catch(err => err)
+      .then(() => done(), done)
   })
 });
 
@@ -89,8 +140,8 @@ describe('create a new game', () => {
  */
 after(function() {
   UserModel.remove({})
-    .catch(err => {throw new Error(err.message)});
+    .catch(err => err);
 
   GameModel.remove({})
-    .catch(err => {throw new Error(err.message)});
+    .catch(err => err);
 });
