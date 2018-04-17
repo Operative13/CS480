@@ -10,22 +10,41 @@ import Game from 'kingdoms-game-sdk/Game';
 import IP from '../../config';
 
 export default class GameScreen extends React.Component {
-    
+
     constructor(props){
         super(props);
         this.state = {
             isWinner: false,
             region: {
-                latitude: 37.78825,
-                longitude: -122.4324,
+                latitude: 34.0576,
+                longitude: -117.8207,
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
             },
+            playerMarkers:[
+                {
+                    coordinate: {
+                        latitude: 34.0576,
+                        longitude: -117.820,
+                    },
+                    title: "Host",
+                    pinColor: '#0000ff',
+                },
+                {
+                    coordinate: {
+                        latitude: 34.0577,
+                        longitude: -117.821,
+                    },
+                    title: "Enemy",
+                    pinColor: '#ff0000',
+                },
+            ],
             userID: null,
             gameID: '',
             lat: null,
             lon: null,
             error: null,
+            regionSet: false,
         };
         //initial game id
         const {params} = this.props.navigation.state;
@@ -33,6 +52,15 @@ export default class GameScreen extends React.Component {
 
         let baseConn = new BaseConnection( IP ,'3000');
         this.game = new Game(baseConn);
+
+
+        this.getGeolocation();
+        //update geolocation of player and game
+        //this.updateGeolocation();
+        //setInterval(this.updateGeolocation(), 5000);
+    }
+
+    componentWillMount(){
         //get gameInstance
         if(this.state.gameID === '' || this.state.gameID === null || this.state.gameID === undefined){
             alert('error getting game ID');
@@ -45,14 +73,24 @@ export default class GameScreen extends React.Component {
             .catch((err) =>{
                 alert('getGame' + err);
             });
-
-        //update geolocation of player and game
-        //this.updateGeolocation();
-        //setInterval(this.updateGeolocation(), 5000);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                let region = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.0011
+                }
+                this.setState({region,regionSet:true})
+            },
+            (error) => alert(JSON.stringify(error)),
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+        );
     }
 
     componentDidMount(){
         this._loadInitialState().done();
+
     }
 
     _loadInitialState = async () => {
@@ -64,17 +102,14 @@ export default class GameScreen extends React.Component {
             this.props.navigation.pop(1);
         }
         this.state.userID = value;
-
     }
 
     getGeolocation() {
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                alert(position.coords.latitude);
-                this.setState({
-                    lat: position.coords.latitude,
-                    lon: position.coords.longitude,
-                    error: null,
+                this.playerMarkers.coordinate.setState({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
                 });
             },
             (error) => this.setState({ error: error.message }),
@@ -93,13 +128,28 @@ export default class GameScreen extends React.Component {
             });
     }
 
+    onRegionChange(region) {
+        if(!this.state.regionSet) return;
+        this.setState({ region });
+    }
+
+
     render(){
         return(
             <View style={styles.wrapper}>
                 <View style={styles.container}>
                     <MapView style={styles.map}
                         region={this.state.region}
-                    />
+                        onRegionChangeComplete={region => this.onRegionChange(region)}
+                    >
+                        {this.state.playerMarkers.map(marker => (
+                            <Marker
+                                coordinate={marker.coordinate}
+                                title={marker.title}
+                                pinColor ={marker.pinColor}
+                            />
+                        ))}
+                    </MapView>
                 </View>
                 <View style={styles.menuContainer}>
                     <TouchableOpacity
@@ -119,7 +169,8 @@ export default class GameScreen extends React.Component {
             </View>    
         );
     }
-    
+
+
     endGame = () => {
         //alert('ending game');
         this.props.navigation.navigate('GameOver', {isWinner: this.state.isWinner});
