@@ -34,7 +34,8 @@ before(function() {
 });
 
 describe('list of users', () => {
-  it('should be equal to empty array', (done) => {
+  it('should be equal to empty array', function(done) {
+      this.timeout(4000); // in milliseconds
       UserModel.find()
         .catch(err => err)
         .then((users) => {
@@ -46,13 +47,14 @@ describe('list of users', () => {
 
 describe('create 2 new users', () => {
   it('each should return user doc in the response', async function() {
-    // limit it to 2 seconds to finish this test
-    this.timeout(2000);
+    // limited time to finish this test before entire test run ends due to timeout
+    this.timeout(4000); // in milliseconds
 
+    // user
     let username = 'james',
         password = 'pw';
 
-    let email = 'john@email.com';
+    let email = 'john@email.com'; // user2 email
 
     // need to wait for this since we rely on using this users info for
     // next test function calls
@@ -77,12 +79,13 @@ describe('create 2 new users', () => {
 });
 
 describe('db.users', () => {
-  it('should contain two users', function() {
+  it('should contain two users', function(done) {
     // limit it to 2 seconds to finish this test
     this.timeout(2000);
     UserModel.find({}, (err, users) => {
       if (err) return done(err);
       assert(users.length === 2);
+      done();
     });
   });
 });
