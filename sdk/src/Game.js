@@ -18,7 +18,8 @@ module.exports = class Game {
   }
 
   /**
-   * Create a new game lobby / session
+   * Create a new game lobby / session. The user that creates it is
+   * automatically put in it.
    * @param name - game name
    * @param userId - id of user who is creating the game
    * @param lat - initial latitude of player
@@ -50,6 +51,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
+              if (!response.ok) reject(json);
               this._updateGame(json);
               resolve(json);
             })
@@ -160,6 +162,40 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
+              this._updateGame(json);
+              resolve(json);
+            })
+            .catch(err => reject(err))
+        })
+        .catch(err => reject(err))
+    })
+  }
+
+  /**
+   *
+   * @returns {Promise<any>} resolve contains an object from response body
+   *  reject contains an error
+   */
+  leave(userId, gameId=null) {
+    let requestInfo = {
+      userId: userId,
+    };
+
+    return new Promise((resolve, reject) => {
+      fetch(
+        `${this._url}/leave/${gameId || this.id}`,
+        {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestInfo),
+        })
+        .then((response) => {
+          response.json()
+            .then((json) => {
+              if (!response.ok) reject(json);
               this._updateGame(json);
               resolve(json);
             })

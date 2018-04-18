@@ -123,20 +123,36 @@ describe('try to create a user with a taken username', () => {
  * __v: 0 }
  */
 describe('create a new game', () => {
-  it('should return the game doc in the response', (done) => {
+  it('should return the game doc in the response', async () => {
     let name = 'room1',
         userId = user.id,
         lat = 123,
         lon = 123;
-
-    game.create(name, userId, lat, lon)
+    console.log(user);
+    await game.create(name, userId, lat, lon)
       .then(response => {
+        console.log(response);
         assert(response.users && response.users[0], 'something is in game.users');
         assert(response.geolocations[userId], `${user.id} is in game.geolocations`);
       })
       .catch(err => err)
-      .then(() => done(), done)
-  })
+    console.log(game);
+  });
+});
+
+describe('have james, a user, leave the game', () => {
+  it('should remove james from the game then delete the empty game', function(done) {
+    this.timeout(4000);
+    console.log(game.toString());
+    game.leave(user.id)
+      .then(json => {
+        console.log(json);
+        done();
+      })
+      .catch(err => {
+        done(new Error(err.message));
+      })
+  });
 });
 
 /**

@@ -17,6 +17,7 @@ const { joinGame, joinGameByName } = require('./GameFunctions');
 const GameFunctions = require('./GameFunctions');
 const asJsonString = require('../utility/general').asJsonString;
 const asJson = require('../utility/general').asJson;
+const { errorToJson } = require('../exceptions/exceptions');
 
 /**
  * Send all games
@@ -67,9 +68,12 @@ router.post('/create', function(req, res) {
           };
           // player created and is added to this games room or he is just added to
           // this games room
-          return joinGameByName(req.body.name, playerInfo, res);
+          joinGameByName(req.body.name, playerInfo, res)
+            .then(response => {console.log(response); return res})
+            .catch(err => err);
+        } else {
+          return res.status(500).send('creating games room screwed up');
         }
-        return res.status(500).send('creating games room screwed up');
       });
     })
 });
@@ -140,7 +144,7 @@ router.post('/join', async (req, res) => {
  */
 router.post('/leave/:id', (req, res) => {
   Game.findById(req.params.id, function (err, game) {
-    if (err) return res.status(500).send(err.message);
+    if (err) return res.status(500).json(err);
     if (!game) return res.status(404).send("No games found.");
     if (!req.body.userId) res.status(400).send('no userId given');
 

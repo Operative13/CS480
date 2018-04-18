@@ -6,6 +6,7 @@ const {
   BackendException
 } = require('../exceptions/exceptions');
 const UserFunctions = require('../users/UserFunctions');
+const errorToJson = require('../exceptions/exceptions').errorToJson;
 
 /**
  * Attempts to put the users in a games room
@@ -20,9 +21,9 @@ const UserFunctions = require('../users/UserFunctions');
  * @param httpResponse response created by express when the original HTTP
  * request was made
  * @param error an error or exception passed from a callback or promise
- * @returns {undefined, Response}
+ * @returns {Response} resolution value is the modified response given
  */
-function joinGame(game, userInfo, httpResponse, error, leavePreviousGame=true) {
+async function joinGame(game, userInfo, httpResponse, error,) {
     if (error) return httpResponse.status(500).send(error);
     if (!game) {
       return httpResponse
@@ -30,18 +31,11 @@ function joinGame(game, userInfo, httpResponse, error, leavePreviousGame=true) {
         .send(`No game found, game =\n${JSON.stringify(game, null, 2)}`);
     }
 
-    try {
-      game = addUser(game, userInfo);
-    } catch (error) {
-        if (error instanceof RequestRejectedException) {
-          // room was full already
-          return httpResponse.status(400).send(error.message);
-        }
-        // server error encountered
-        return httpResponse.status(500).send(error.message);
-    }
-    // successfully joined the game room
-    return httpResponse.status(200).send(game);
+    addUser(game, userInfo)
+      .then(game => {return httpResponse.status(200).json(game)})
+      .catch(err => httpResponse
+        .status(err instanceof RequestRejectedException ? 400: 500)
+        .json(errorToJson(err)))
 }
 
 /**
@@ -56,11 +50,14 @@ function joinGame(game, userInfo, httpResponse, error, leavePreviousGame=true) {
  *  }
  * @param httpResponse response created by express when the original HTTP
  * request was made
- * @returns {undefined, Response}
+ * @returns {Promise}
  */
-function joinGameByName(gameName, userInfo, httpResponse) {
+async function joinGameByName(gameName, userInfo, httpResponse) {
   Game.findOne({name: gameName}, (err, game) => {
-    return joinGame(game, userInfo, httpResponse, err);
+    // return joinGame(game, userInfo, httpResponse, err);
+    joinGame(game, userInfo, httpResponse, err)
+      .then(response => response)
+      .catch(err => err)
   });
 }
 
@@ -71,43 +68,50 @@ function joinGameByName(gameName, userInfo, httpResponse) {
  * @param {Object} userInfo contains the following keys: userId, lat, lon
  * @returns {mongoose.Document} games with updated value for users, gets saved
  */
-async function addUser(game, userInfo) {
-  // if games room is at capacity
-  if (game.users.length >= GameConfig.maxUsers ||
-    (game.geolocations && Object.keys(game.geolocations).length >= GameConfig.maxUsers)) {
+function addUser(game, userInfo) {
+  return new Promise((resolve, reject) => {
+    // if games room is at capacity
+    if (game.users.length >= GameConfig.maxUsers ||
+      (game.geolocations && Object.keys(game.geolocations).length >= GameConfig.maxUsers)) {
 
-    throw new exceptions.RequestRejectedException(
-      `${game.name} already has max users`);
-  }
+      reject(new exceptions.RequestRejectedException(
+        `${game.name} already has max users`));
+    }
 
-  // geolocations is missing from Document entirely somehow
-  if (!game.geolocations) {
-    throw new exceptions.BackendException(
-      `${JSON.stringify(game, null, 2)}\ngeolocations not found in Game document`);
-  }
+    // geolocations is missing from Document entirely somehow
+    if (!game.geolocations) {
+      reject(new exceptions.BackendException(
+        `${JSON.stringify(game, null, 2)}\ngeolocations not found in Game document`));
+    }
 
-  let addUserIn = () => {
-    game.users.push(userInfo.myUserId);
-    game.geolocations[userInfo.myUserId] = {
-      lat: userInfo.lat,
-      lon: userInfo.lon
+    let addUserIn = () => {
+      return new Promise((resolve, reject) => {
+            game.users.push(userInfo.myUserId);
+      game.geolocations[userInfo.myUserId] = {
+        lat: userInfo.lat,
+        lon: userInfo.lon
+      };
+
+      // required when modifying and saving value(s) of a property of type Mixed
+      // or of type Object in schema
+      game.markModified('geolocations');
+      game.save()
+        .then((savedGame) => resolve(savedGame))
+        .catch(err => reject(err))
+      })
     };
 
-    // required when modifying and saving value(s) of a property of type Mixed
-    // or of type Object in schema
-    game.markModified('geolocations');
-    game.save();
-    return game;
-  };
-
-  isUserInAGame(userInfo.userId)
-    .catch(err => {throw err})
-    .then((isInAGame, gameUserIsAlreadyIn) => {
-      if (isInAGame) {
-        removeUser(gameUserIsAlreadyIn, userInfo.userId).then(() => addUserIn());
-      } else {
-        return addUserIn();
-      }
+    isUserInAGame(userInfo.userId)
+      .then((isInAGame, gameUserIsAlreadyIn) => {
+        if (isInAGame) {
+          removeUser(gameUserIsAlreadyIn, userInfo.userId)
+            .then(() => resolve(addUserIn()))
+            .catch(err => reject(err))
+        } else {
+          resolve(addUserIn());
+        }
+      })
+      .catch(err => reject(err))
     });
 }
 
@@ -138,7 +142,7 @@ function removeUser(game, userId) {
       game.markModified('geolocations');
       game.save()
         .then(savedGame => resolve(savedGame))
-        .catch(err => reject(err.message));
+        .catch(err => reject(err));
     }
   });
 }
