@@ -69,7 +69,7 @@ router.post('/create', function(req, res) {
           // player created and is added to this games room or he is just added to
           // this games room
           joinGameByName(req.body.name, playerInfo, res)
-            .then(response => {console.log(response); return res})
+            .then(() => {return res})
             .catch(err => err);
         } else {
           return res.status(500).send('creating games room screwed up');

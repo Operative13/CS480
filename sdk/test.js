@@ -108,7 +108,9 @@ describe('try to create a user with a taken username', () => {
         // console.log(user.toString());
         done();
       })
-      .catch(err => done());
+      // TODO: use expect function from mocha to assert exception is thrown
+      .catch(err => done())
+      // .catch(err => done(new Error(err.message)));
   });
 });
 
@@ -128,25 +130,21 @@ describe('create a new game', () => {
         userId = user.id,
         lat = 123,
         lon = 123;
-    console.log(user);
     await game.create(name, userId, lat, lon)
       .then(response => {
-        console.log(response);
         assert(response.users && response.users[0], 'something is in game.users');
         assert(response.geolocations[userId], `${user.id} is in game.geolocations`);
       })
-      .catch(err => err)
-    console.log(game);
+      .catch(err => err);
   });
 });
 
 describe('have james, a user, leave the game', () => {
   it('should remove james from the game then delete the empty game', function(done) {
     this.timeout(4000);
-    console.log(game.toString());
     game.leave(user.id)
       .then(json => {
-        console.log(json);
+        assert(json.users.length === 0);
         done();
       })
       .catch(err => {
