@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "echo not implemented",
-    "test": "mocha",
+    "test": "npm run build; mocha",
     "build": "babel src -d lib"
   },
   "author": "jtara1",

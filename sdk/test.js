@@ -88,12 +88,12 @@ describe('db.users', () => {
 });
 
 describe('try to create a user with a taken username', () => {
-  it('should throw an exception in the http response', function() {
+  it('should throw an exception in the http response', function(done) {
     // limit it to 2 seconds to finish this test
     this.timeout(2000);
 
     let username = 'james',
-      password = 'pw';
+        password = 'pw';
 
     // need to wait for this since we rely on using this users info for
     // next test function calls
@@ -103,8 +103,9 @@ describe('try to create a user with a taken username', () => {
         assert(username === response.username);
         assert(username === user.username);
         // console.log(user.toString());
+        done();
       })
-      .catch(err => err);
+      .catch(err => done());
   });
 });
 

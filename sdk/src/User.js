@@ -24,6 +24,10 @@ module.exports = class User {
     if (email) this.email = email;
   }
 
+  _updateUserWithObject(jsonObject) {
+    return this._updateUser(jsonObject._id, jsonObject.username, jsonObject.email);
+  }
+
   /**
    * Gets the list of all users
    * @returns {Promise<*>} resolves to an Array of Objects containing info on
@@ -70,12 +74,13 @@ module.exports = class User {
         .then((response) => {
           response.json()
             .then((json) => {
+              if (!response.ok) reject(json);
               this._updateUser(json._id, json.username, json.email);
               resolve(json);
             })
             .catch(err => {console.error(err); reject(err)});
         })
-        .catch((err) => {console.error(err); reject(err.json())});
+        .catch((err) => {console.error(err); reject(err)});
     });
   }
 
