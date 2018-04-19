@@ -7,6 +7,13 @@ const {
 } = require('../exceptions/exceptions');
 const UserFunctions = require('../users/UserFunctions');
 const errorToJson = require('../exceptions/exceptions').errorToJson;
+const {
+  requestError,
+  serverError,
+  success,
+} = require('../utility/ResponseHandler');
+const ObjectId = require('mongoose').Types.ObjectId;
+
 
 /**
  * Attempts to put the users in a games room
@@ -24,18 +31,19 @@ const errorToJson = require('../exceptions/exceptions').errorToJson;
  * @returns {Response} resolution value is the modified response given
  */
 async function joinGame(game, userInfo, httpResponse, error,) {
-    if (error) return httpResponse.status(500).send(error);
+    if (error) return requestError(httpResponse, error);
     if (!game) {
-      return httpResponse
-        .status(400)
-        .send(`No game found, game =\n${JSON.stringify(game, null, 2)}`);
+      let msg = `No game found`;
+      return requestError(httpResponse, new Error(msg));
     }
 
     addUser(game, userInfo)
-      .then(game => {return httpResponse.status(200).json(game)})
-      .catch(err => httpResponse
-        .status(err instanceof RequestRejectedException ? 400: 500)
-        .json(errorToJson(err)))
+      .then(savedGame => {return success(httpResponse, savedGame)})
+      .catch(err => {
+        return err instanceof RequestRejectedException ?
+          requestError(httpResponse, err) :
+          serverError(httpResponse, err);
+      });
 }
 
 /**
@@ -54,7 +62,6 @@ async function joinGame(game, userInfo, httpResponse, error,) {
  */
 async function joinGameByName(gameName, userInfo, httpResponse) {
   Game.findOne({name: gameName}, (err, game) => {
-    // return joinGame(game, userInfo, httpResponse, err);
     joinGame(game, userInfo, httpResponse, err)
       .then(response => response)
       .catch(err => err)
@@ -66,7 +73,7 @@ async function joinGameByName(gameName, userInfo, httpResponse) {
  * @throws {BackendException} if Document is screwed up
  * @param {mongoose.Document} game
  * @param {Object} userInfo contains the following keys: userId, lat, lon
- * @returns {mongoose.Document} games with updated value for users, gets saved
+ * @returns {Promise<mongoose.Document>} games with updated value for users, gets saved
  */
 function addUser(game, userInfo) {
   return new Promise((resolve, reject) => {
@@ -75,21 +82,21 @@ function addUser(game, userInfo) {
       (game.geolocations && Object.keys(game.geolocations).length >= GameConfig.maxUsers)) {
 
       reject(new exceptions.RequestRejectedException(
-        `${game.name} already has max users`));
+        `game.name = ${game.name} already has max users permitted`));
     }
 
     // geolocations is missing from Document entirely somehow
     if (!game.geolocations) {
-      reject(new exceptions.BackendException(
-        `${JSON.stringify(game, null, 2)}\ngeolocations not found in Game document`));
+      let msg = `geolocations not found: game.name = ${game.name}`;
+      reject(new exceptions.BackendException(msg));
     }
 
-    let addUserIn = () => {
+    function addUserIn () {
       return new Promise((resolve, reject) => {
-            game.users.push(userInfo.myUserId);
-      game.geolocations[userInfo.myUserId] = {
-        lat: userInfo.lat,
-        lon: userInfo.lon
+        game.users.push(userInfo.userId);
+        game.geolocations[userInfo.userId] = {
+          lat: userInfo.lat,
+          lon: userInfo.lon
       };
 
       // required when modifying and saving value(s) of a property of type Mixed
@@ -99,12 +106,12 @@ function addUser(game, userInfo) {
         .then((savedGame) => resolve(savedGame))
         .catch(err => reject(err))
       })
-    };
+    }
 
     isUserInAGame(userInfo.userId)
-      .then((isInAGame, gameUserIsAlreadyIn) => {
+      .then(([isInAGame, gameUserIsAlreadyIn]) => {
         if (isInAGame) {
-          removeUser(gameUserIsAlreadyIn, userInfo.userId)
+          removeUser(gameUserIsAlreadyIn, userInfo.userId, deleteEmptyGame=gameUserIsAlreadyIn.name !== game.name)
             .then(() => resolve(addUserIn()))
             .catch(err => reject(err))
         } else {
@@ -119,14 +126,19 @@ function addUser(game, userInfo) {
  * Removes a user from a game given the game document and the userId
  * @param game
  * @param userId - id of user who is going to be removed from the game
+ * @param deleteEmptyGame {boolean} - if true, deletes the game from the
+ *  collection if it no longer has any users in it
  * @returns {Promise} resolves or rejects with value to be sent with response
  */
-function removeUser(game, userId) {
+function removeUser(game, userId, deleteEmptyGame=true) {
   return new Promise((resolve, reject) => {
     delete game.geolocations[userId];
     // we're actually comparing a String and an ObjectId
     let removeIndex = game.users.findIndex((id) => id == userId);
-    if (removeIndex === -1) reject(`could not find user of id ${userId} in list of users for this game`);
+    if (removeIndex === -1) {
+      let msg = `could not find user id ${userId} in game ${game.name}`;
+      reject(new Error(msg));
+    }
 
     // remove the userId from the array of userIds
     let begin = game.users.slice(0, removeIndex);
@@ -134,7 +146,7 @@ function removeUser(game, userId) {
     game.users = begin.concat(end);
 
     // no more users in this game
-    if (!game.users.length) {
+    if (!game.users.length && deleteEmptyGame) {
       deleteGame(game._id)
         .then(() => resolve(game))
         .catch(err => reject(err))
@@ -147,20 +159,31 @@ function removeUser(game, userId) {
   });
 }
 
+/**
+ * Delete the game document whose _id === gameId
+ * @param gameId {ObjectId}
+ * @returns {Promise}
+ */
 function deleteGame(gameId) {
   return new Promise((resolve, reject) => {
     Game.remove({_id: gameId}, (err, game) => {
       if (err) reject(err);
-      if (!game) reject('game not found');
+      if (!game) {
+        let msg = `no game found for _id = ${gameId}`;
+        reject(new Error(msg));
+      }
       resolve(game);
     });
   });
 }
 
-async function isUserInAGame(userId) {
-  Game.findOne({[`geolocations.${userId}`]: {$exists: true}}, (err, game) => {
-    if (err) throw err;
-    return [!!game, game];
+function isUserInAGame(userId) {
+  return new Promise((resolve, reject) => {
+    let id = String(userId);
+    Game.findOne({[`geolocations.${id}`]: {$exists: true}}, (err, game) => {
+      if (err) reject(err);
+      resolve([!!game, game]);
+    })
   })
 }
 

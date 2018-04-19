@@ -14,7 +14,7 @@ const {
 } = require('../utility/ResponseHandler');
 
 /**
- * @returns all users from db.users
+ * Get all users from db.users
  */
 router.get('/', function (req, res) {
   User.find({}, function (err, users) {
