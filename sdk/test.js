@@ -16,7 +16,7 @@ const User = require('./lib/User');
 const Game = require('./lib/Game');
 const baseConnection = new BaseConnection('localhost', '3000');
 const userJames = new User(baseConnection);
-const user2 = new User(baseConnection);
+const userJohn = new User(baseConnection);
 const user3 = new User(baseConnection);
 const game = new Game(baseConnection);
 
@@ -33,6 +33,9 @@ before(function() {
   GameModel = conn.model('Game', GameModelImported.schema);
 });
 
+/**
+ * TODO: Use User#getUsers to confirm this a 2nd time
+ */
 describe('list of users', () => {
   it('should be equal to empty array', function(done) {
       this.timeout(4000); // in milliseconds
@@ -45,7 +48,7 @@ describe('list of users', () => {
     })
 });
 
-describe('create 2 new users', () => {
+describe('User#create: create 2 new users', () => {
   it('each should return user doc in the response', async function() {
     // limited time to finish this test before entire test run ends due to timeout
     this.timeout(4000); // in milliseconds
@@ -66,15 +69,24 @@ describe('create 2 new users', () => {
       })
       .catch(err => err);
 
-    let p2 = user2.create('john', 'pw', email)
+    let p2 = userJohn.create('john', 'pw', email)
       .then(response => {
         // console.log(user2);
         assert(response.email === email);
-        assert(user2.email === email);
+        assert(userJohn.email === email);
       })
       .catch(err => err);
 
     await Promise.all([p1, p2]);
+  });
+});
+
+describe('User#login: have james login successfully', () => {
+  it('should return the user doc associated with james', function() {
+    return (new User(baseConnection)).login(userJames.username, 'pw')
+      .then(json => {
+        assert(json._id === userJames.id);
+      })
   });
 });
 
@@ -90,7 +102,7 @@ describe('db.users', () => {
   });
 });
 
-describe('try to create a user with a taken username', () => {
+describe('User#create: try to create a user with a taken username', () => {
   it('should throw an exception in the http response', function(done) {
     // limit it to 2 seconds to finish this test
     this.timeout(2000);
@@ -105,10 +117,9 @@ describe('try to create a user with a taken username', () => {
         console.log(response);
         assert(username === response.username);
         assert(username === userJames.username);
-        // console.log(user.toString());
         done();
       })
-      // TODO: use expect function from mocha to assert exception is thrown
+      // TODO: use expect function from chai to assert exception is thrown
       .catch(err => done())
       // .catch(err => done(new Error(err.message)));
   });
@@ -124,7 +135,7 @@ describe('try to create a user with a taken username', () => {
  * name: 'room1',
  * __v: 0 }
  */
-describe('create a new game', () => {
+describe('Game#create: create a new game', () => {
   it('should return the game doc in the response', async () => {
     let name = 'room1',
         userId = userJames.id,
@@ -139,7 +150,7 @@ describe('create a new game', () => {
   });
 });
 
-describe('set james\'s geolocation to 10, 50 (lon, lat)', () => {
+describe('Game#setGeolocation: set james\'s geolocation to 10, 50 (lon, lat)', () => {
   it('should change the info stored in the game doc', function(done) {
     game.setGeolocation(userJames.id, 10, 50)
       .then(json => {
@@ -151,7 +162,7 @@ describe('set james\'s geolocation to 10, 50 (lon, lat)', () => {
   })
 });
 
-describe('have james, a user, leave the game', () => {
+describe('Game#leave: have james, a user, leave the game', () => {
   it('should remove james from the game then delete the empty game', function(done) {
     this.timeout(4000);
     game.leave(userJames.id)

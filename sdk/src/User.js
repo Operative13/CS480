@@ -1,4 +1,8 @@
 import fetch from 'node-fetch';
+import {
+  getDataFromSuccess,
+  getErrorFromFailOrError
+} from './utility';
 
 /**
  * Represents a single users and allows for access to backend REST API
@@ -24,8 +28,8 @@ module.exports = class User {
     if (email) this.email = email;
   }
 
-  _updateUserWithObject(jsonObject) {
-    return this._updateUser(jsonObject._id, jsonObject.username, jsonObject.email);
+  _updateUserWithObject(object) {
+    return this._updateUser(object._id, object.username, object.email);
   }
 
   /**
@@ -45,6 +49,7 @@ module.exports = class User {
       },
     )
       .then((response) => response.json())
+      .then(json => getDataFromSuccess(json))
       .catch((err) => err);
   }
 
@@ -75,6 +80,8 @@ module.exports = class User {
           response.json()
             .then((json) => {
               if (!response.ok) reject(json);
+
+              json = getDataFromSuccess(json);
               this._updateUser(json._id, json.username, json.email);
               resolve(json);
             })
@@ -105,26 +112,35 @@ module.exports = class User {
   async login(username, password) {
     let userInfo = {username: username, password: password};
 
-    return fetch(
-      this._url + '/login',
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userInfo),
-      }
-    )
-      .then((response) => {
-        this._updateUser(response._id, response.username, response.email);
-        return response.json();
-      })
-      .catch((err) => err);
+    return new Promise((resolve, reject) => {
+      return fetch(
+        this._url + '/login',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(userInfo),
+        }
+      )
+        .then((response) => {
+          response.json()
+            .then(json => {
+              if (!response.ok) reject(getErrorFromFailOrError(json));
+
+              let data = getDataFromSuccess(json);
+              this._updateUser(data._id, data.username, data.email);
+              resolve(data);
+            })
+            .catch(err => reject(err));
+        })
+        .catch((err) => reject(err));
+    })
   }
 
   toString() {
-    // pretty printed JSON representation of this instance
+    // pretty formatted JSON representation of this instance
     return JSON.stringify({
         id: this.id,
         username: this.username,
@@ -134,4 +150,4 @@ module.exports = class User {
       2
     );
   }
-}
+};
