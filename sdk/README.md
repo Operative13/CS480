@@ -13,6 +13,8 @@ the REST API defined in the backend of our game, kingdoms-game.
 
 ## Usage
 
+In an ES6 app that supports `import`
+
 ```
 import BaseConnection from 'kingdoms-game-sdk/src/BaseConnection';
 import User from 'kingdoms-game-sdk/src/User';
@@ -22,6 +24,12 @@ let user = new User(conn);
 user.create('usernamer123', 'password')
     .then((response) => console.log(response))
     .catch((error) => console.error(error));
+```
+
+In a Nodejs app
+```
+const sdk = require('kingdoms-game-sdk');
+// ... same usage thereafter 
 ```
 
 Do note that the methods that call the REST API from all of the classes 

@@ -15,7 +15,7 @@ const BaseConnection = require('./lib/BaseConnection');
 const User = require('./lib/User');
 const Game = require('./lib/Game');
 const baseConnection = new BaseConnection('localhost', '3000');
-const user = new User(baseConnection);
+const userJames = new User(baseConnection);
 const user2 = new User(baseConnection);
 const user3 = new User(baseConnection);
 const game = new Game(baseConnection);
@@ -58,10 +58,10 @@ describe('create 2 new users', () => {
 
     // need to wait for this since we rely on using this users info for
     // next test function calls
-    let p1 = user.create(username, password)
+    let p1 = userJames.create(username, password)
       .then((response) => {
         assert(username === response.username);
-        assert(username === user.username);
+        assert(username === userJames.username);
         // console.log(user.toString());
       })
       .catch(err => err);
@@ -104,7 +104,7 @@ describe('try to create a user with a taken username', () => {
       .then((response) => {
         console.log(response);
         assert(username === response.username);
-        assert(username === user.username);
+        assert(username === userJames.username);
         // console.log(user.toString());
         done();
       })
@@ -127,22 +127,34 @@ describe('try to create a user with a taken username', () => {
 describe('create a new game', () => {
   it('should return the game doc in the response', async () => {
     let name = 'room1',
-        userId = user.id,
+        userId = userJames.id,
         lat = 123,
         lon = 123;
     await game.create(name, userId, lat, lon)
       .then(response => {
         assert(response.users && response.users[0], 'something is in game.users');
-        assert(response.geolocations[userId], `${user.id} is in game.geolocations`);
+        assert(response.geolocations[userId], `${userJames.id} is in game.geolocations`);
       })
       .catch(err => err);
   });
 });
 
+describe('set james\'s geolocation to 10, 50 (lon, lat)', () => {
+  it('should change the info stored in the game doc', function(done) {
+    game.setGeolocation(userJames.id, 10, 50)
+      .then(json => {
+        assert(json.geolocations[userJames.id].lon === 10);
+        assert(json.geolocations[userJames.id].lat === 50);
+        done();
+      })
+      .catch(err => done(new Error(err.message || err.data)));
+  })
+});
+
 describe('have james, a user, leave the game', () => {
   it('should remove james from the game then delete the empty game', function(done) {
     this.timeout(4000);
-    game.leave(user.id)
+    game.leave(userJames.id)
       .then(json => {
         assert(json.users.length === 0);
         done();

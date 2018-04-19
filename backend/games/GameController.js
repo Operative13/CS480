@@ -172,8 +172,8 @@ router.get('/:id', function(req, res) {
  * in request body
  */
 router.post('/:id', function(req, res) {
-  Game.findOne({_id: req.params.id}, function(err, game) {
-    if (err) return res.status(500).send(`no such game ${req.params.id}`);
+  Game.findOne({_id: ObjectId(req.params.id)}, function(err, game) {
+    if (err) return res.status(500).send(err);
     try {
       if (!game.geolocations[req.body.myUserId]) {
         return res.status(400).send(`user._id ${req.body.myUserId} not found in game room`);

@@ -7,6 +7,16 @@ router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 const User = new require('./User');
 const { errorToJson } = require('../exceptions/exceptions');
+const {
+  dataToJsendSuccess,
+  errorToJsendError,
+  errorToJsendFail
+} = require('../utility/general');
+const {
+  requestError,
+  serverError,
+  success,
+} = require('../utility/ResponseHandler');
 
 /**
  * @returns all users from db.users
@@ -27,7 +37,8 @@ router.get('/', function (req, res) {
  */
 router.post('/register', function (req, res) {
   bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
-    if (err) return res.status(500).json(errorToJson(err));
+    // if (err) return res.status(500).json(errorToJson(err));
+    if (err) return res.status(500).jsend.error(errorToJsendError(err));
     let newUser = {
       username: req.body.username,
       password: hashedPassword,
@@ -37,7 +48,8 @@ router.post('/register', function (req, res) {
     User.create(
       newUser,
       function (err, user) {
-        if (err) return res.status(500).json(errorToJson(err));
+        if (err) return requestError(res, err);
+        // if (err) return res.status(400).jsend.error(errorToJsendFail(err));
         res.status(200).send(user);
       }
     );
