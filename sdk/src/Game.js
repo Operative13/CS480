@@ -1,4 +1,8 @@
 import fetch from 'node-fetch';
+import {
+  getDataFromSuccess,
+  getErrorFromFailOrError
+} from './utility';
 
 module.exports = class Game {
   constructor(baseConnection) {
@@ -14,7 +18,8 @@ module.exports = class Game {
     if (gameDocumentJson._id) this.id = gameDocumentJson._id;
     if (gameDocumentJson.name) this.name = gameDocumentJson.name;
     if (gameDocumentJson.players) this.players = gameDocumentJson.players;
-    if (gameDocumentJson.geolocations) this.geolocations = gameDocumentJson.geolocations;
+    if (gameDocumentJson.geolocations)
+      this.geolocations = gameDocumentJson.geolocations;
   }
 
   /**
@@ -51,9 +56,11 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) reject(json);
-              this._updateGame(json);
-              resolve(json);
+              if (!response.ok) reject(getErrorFromFailOrError(json));
+
+              let data = getDataFromSuccess(json);
+              this._updateGame(data);
+              resolve(data);
             })
             .catch(err => reject(err))
         })
@@ -91,8 +98,11 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              this._updateGame(json);
-              resolve(json);
+              if (!response.ok) reject(getErrorFromFailOrError(json));
+
+              let data = getDataFromSuccess(json);
+              this._updateGame(data);
+              resolve(data);
             })
             .catch(err => reject(err))
         })
@@ -130,8 +140,11 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              this._updateGame(json);
-              resolve(json);
+              if (!response.ok) reject(getErrorFromFailOrError(json));
+
+              let data = getDataFromSuccess(json);
+              this._updateGame(data);
+              resolve(data);
             })
             .catch(err => reject(err))
         })
@@ -162,8 +175,11 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              this._updateGame(json);
-              resolve(json);
+              if (!response.ok) reject(getErrorFromFailOrError(json));
+
+              let data = getDataFromSuccess(json);
+              this._updateGame(data);
+              resolve(data);
             })
             .catch(err => reject(err))
         })
@@ -195,9 +211,11 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) reject(json);
-              this._updateGame(json);
-              resolve(json);
+              if (!response.ok) reject(getErrorFromFailOrError(json));
+
+              let data = getDataFromSuccess(json);
+              this._updateGame(data);
+              resolve(data);
             })
             .catch(err => reject(err))
         })
@@ -211,14 +229,15 @@ module.exports = class Game {
    * and geolocations associated with this instance
    */
   toString() {
-    return JSON.stringify({
-      id: this.id,
-      name: this.name,
-      players: this.players,
-      geolocations: this.geolocations
-    },
+    return JSON.stringify(
+      {
+        id: this.id,
+        name: this.name,
+        players: this.players,
+        geolocations: this.geolocations
+      },
       null,
       2
     );
   }
-}
+};
