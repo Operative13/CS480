@@ -1,6 +1,6 @@
 {
   "name": "kingdoms-game-sdk",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "description": "A REST API wrapper for the kingdoms-game backend",
   "repository": {
     "type": "git",
