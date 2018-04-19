@@ -30,6 +30,8 @@ export default class GameSearch extends React.Component {
             error: null,
         }
 
+        let baseConn = new BaseConnection( IP ,'3000');
+        this.game = new Game(baseConn);
     }
 
     componentDidMount(){
@@ -52,6 +54,19 @@ export default class GameSearch extends React.Component {
         if(this.state.error != null){
             alert(this.state.error);
             this.props.navigation.pop(1);
+        }
+
+        //attempt to leave a game whether or not the user is actually in a game
+        let gameID = await AsyncStorage.getItem('gameID');
+        if(gameID != null){
+            this.game.leave(this.state.userID, gameID)
+                .then((response) => {
+
+                })
+                .catch((error) => {
+                    alert('leave game: ' + error.message)
+                })
+            AsyncStorage.removeItem('gameID');
         }
     }
 
@@ -122,14 +137,13 @@ export default class GameSearch extends React.Component {
     
     createRoom = (roomName) => {
         //alert('creating room');
-        let baseConn = new BaseConnection( IP ,'3000');
-        let game = new Game(baseConn);
 
-        game.create(roomName,this.state.userID,this.state.lat,this.state.lon,true)
+        this.game.create(roomName,this.state.userID,this.state.lat,this.state.lon,true)
             .then((res) => {
                 //if(res.name != roomName) {throw res};
                 //alert(res._id);
                 Keyboard.dismiss();
+                AsyncStorage.setItem('gameID', res._id);
                 this.props.navigation.navigate('GameScreen', {gameID: res._id});
             })
             .catch((err) => {
@@ -142,13 +156,12 @@ export default class GameSearch extends React.Component {
     
     joinRoomByName = (gameName) => {
         //alert('joining by room name');
-        let baseConn = new BaseConnection( IP ,'3000');
-        let game = new Game(baseConn);
 
-        game.join(this.state.userID, gameName)
+        this.game.join(this.state.userID, gameName)
             .then((res) => {
                 //if(res.gameName != gameName) {throw res};
                 Keyboard.dismiss();
+                AsyncStorage.setItem('gameID', res._id);
                 this.props.navigation.navigate('GameScreen', {gameID: res._id});
             })
             .catch((err) => {
@@ -160,13 +173,12 @@ export default class GameSearch extends React.Component {
     
     joinRoomByUser = (joinUserName) => {
         //alert('join by user name');
-        let baseConn = new BaseConnection( IP ,'3000');
-        let game = new Game(baseConn);
 
-        game.join(this.state.userID, null, joinUserName)
+        this.game.join(this.state.userID, null, joinUserName)
             .then((res) => {
                 //if(res.username != joinUserName) {throw res};
                 Keyboard.dismiss();
+                AsyncStorage.setItem('gameID', res._id);
                 this.props.navigation.navigate('GameScreen', {gameID: res._id});
             })
             .catch((err) => {

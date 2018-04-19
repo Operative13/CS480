@@ -27,7 +27,7 @@ export default class GameScreen extends React.Component {
                         latitude: 34.0576,
                         longitude: -117.820,
                     },
-                    title: "Host",
+                    title: "User",
                     pinColor: '#0000ff',
                 },
                 {
@@ -41,10 +41,10 @@ export default class GameScreen extends React.Component {
             ],
             userID: null,
             gameID: '',
-            lat: null,
-            lon: null,
             error: null,
             regionSet: false,
+            timer: null,
+            numErrors: 0,
         };
         //initial game id
         const {params} = this.props.navigation.state;
@@ -53,14 +53,30 @@ export default class GameScreen extends React.Component {
         let baseConn = new BaseConnection( IP ,'3000');
         this.game = new Game(baseConn);
 
-
-        this.getGeolocation();
-        //update geolocation of player and game
-        //this.updateGeolocation();
-        //setInterval(this.updateGeolocation(), 5000);
     }
 
-    componentWillMount(){
+    componentWillUnmount(){
+        clearInterval(this.state.timer);
+    }
+
+    componentDidMount(){
+        this._loadInitialState().done();
+        //create a timer that exists in the component to update geolocation of the player
+        let timer = setInterval(this.updateGeolocation, 5000);
+        this.setState({timer});
+    }
+
+    _loadInitialState = async () => {
+        console.log('loadinitialstate');
+        //get id
+        let value = await AsyncStorage.getItem('_id');
+        //return to menu on error
+        if (value == null){
+            alert('error getting user ID');
+            this.props.navigation.pop(1);
+        }
+        this.state.userID = value;
+
         //get gameInstance
         if(this.state.gameID === '' || this.state.gameID === null || this.state.gameID === undefined){
             alert('error getting game ID');
@@ -73,59 +89,93 @@ export default class GameScreen extends React.Component {
             .catch((err) =>{
                 alert('getGame' + err);
             });
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
+
+        //get geolocation of intial region and initial user position
+        let position = await this.getGeolocation();
+        //initial region set
+        let region = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.0011
+        };
+        this.setState({region,regionSet:true})
+
+        //intial user set
+        let coord = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+        };
+
+        //update player markers
+        let playerMarkersCopy = JSON.parse(JSON.stringify(this.state.playerMarkers));
+        playerMarkersCopy[0].coordinate = coord;    //update user
+        //TODO
+        //playerMarkersCopy[1].coordinate =         //update enemy
+        this.setState({
+            playerMarkers: playerMarkersCopy
+        });
+    }
+
+    getGeolocation() {
+        return new Promise((resolve,reject) => {
+            navigator.geolocation.getCurrentPosition(resolve,reject,{ enableHighAccuracy: true, timeout: 10000});
+        });
+    }
+
+    updateGeolocation = async () => {
+        console.log('updateGeolocation');
+        try{
+            //get geolocation of user
+            let position = await this.getGeolocation();
+
+            if(!this.state.regionSet){
                 let region = {
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude,
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.0011
-                }
+                };
                 this.setState({region,regionSet:true})
-            },
-            (error) => alert(JSON.stringify(error)),
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
-        );
-    }
+            }
 
-    componentDidMount(){
-        this._loadInitialState().done();
+            let coord = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            };
 
-    }
-
-    _loadInitialState = async () => {
-        //get id
-        let value = await AsyncStorage.getItem('_id');
-        //return to menu on error
-        if (value == null){
-            alert('error getting user ID');
-            this.props.navigation.pop(1);
-        }
-        this.state.userID = value;
-    }
-
-    getGeolocation() {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                this.playerMarkers.coordinate.setState({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                });
-            },
-            (error) => this.setState({ error: error.message }),
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
-        );
-    }
-
-    updateGeolocation(){
-        this.getGeolocation();
-        this.game.setGeolocation(this.state.userID,this.state.lon,this.state.lat)
-            .then((response) => {
-
+            //update player markers
+            let playerMarkersCopy = JSON.parse(JSON.stringify(this.state.playerMarkers));
+            playerMarkersCopy[0].coordinate = coord;    //update user
+            //TODO
+            //playerMarkersCopy[1].coordinate =         //update enemy
+            this.setState({
+                playerMarkers: playerMarkersCopy
             })
-            .catch((err) =>{
-                alert(this.state.userID + this.state.lon + this.state.lat + 'updateGeolocation' + err);
-            });
+
+
+            //update geolocation on server
+            this.game.setGeolocation(this.state.userID, position.coords.latitude, position.coords.longitude)
+                .then((response) => {
+                    this.setState({numErrors: 0});
+                })
+                .catch((err) =>{
+                    //TODO
+                    //figure out what the specific way to check for "TypeError: Network request failed" is
+                    let numErrors = this.state.numErrors + 1;
+                    this.setState({numErrors: numErrors});
+                    if(numErrors > 5){
+                        alert(err);
+                    }
+                    //alert(this.state.userID +' '+ this.state.playerMarkers[0].coordinate.longitude + ' ' + this.state.playerMarkers[0].coordinate.latitude + ' updateGeolocation: ' + err);
+                });
+
+            //alert(' test: ' + this.state.userID +' '+ this.state.playerMarkers[0].coordinate.longitude + ' ' + this.state.playerMarkers[0].coordinate.latitude );
+        }
+        catch (error){
+            alert('updateGeolocation: ' + error);
+        }
+
     }
 
     onRegionChange(region) {
@@ -144,6 +194,7 @@ export default class GameScreen extends React.Component {
                     >
                         {this.state.playerMarkers.map(marker => (
                             <Marker
+                                key={marker.title}
                                 coordinate={marker.coordinate}
                                 title={marker.title}
                                 pinColor ={marker.pinColor}
@@ -154,7 +205,7 @@ export default class GameScreen extends React.Component {
                 <View style={styles.menuContainer}>
                     <TouchableOpacity
                         style={styles.btn}
-                        onPress={() => this.props.navigation.pop(2)}
+                        onPress={this.quitGame}
                     >
                         <Text>Quit</Text>
                     </TouchableOpacity>
@@ -170,9 +221,16 @@ export default class GameScreen extends React.Component {
         );
     }
 
+    quitGame = () => {
+        this.game.leave(this.state.userID, this.state.gameID);
+        AsyncStorage.removeItem('gameID');
+        this.props.navigation.pop(2);
+    }
 
     endGame = () => {
         //alert('ending game');
+        this.game.leave(this.state.userID, this.state.gameID);
+        AsyncStorage.removeItem('gameID');
         this.props.navigation.navigate('GameOver', {isWinner: this.state.isWinner});
     }
 
