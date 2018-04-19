@@ -1,6 +1,7 @@
 {
   "name": "kingdoms-game-sdk",
-  "version": "0.0.8",
+  "version": "0.0.12",
+  "main": "main.nodejs.js",
   "description": "A REST API wrapper for the kingdoms-game backend",
   "repository": {
     "type": "git",
@@ -9,7 +10,8 @@
   "scripts": {
     "start": "echo not implemented",
     "test": "npm run build; mocha",
-    "build": "babel src -d lib"
+    "build": "babel src -d lib",
+    "docs": "jsdoc src -c jsdoc.config.json -d docs"
   },
   "author": "jtara1",
   "license": "ISC",
