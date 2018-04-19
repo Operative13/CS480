@@ -2,16 +2,11 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 const User = new require('./User');
-const { errorToJson } = require('../exceptions/exceptions');
-const {
-  dataToJsendSuccess,
-  errorToJsendError,
-  errorToJsendFail
-} = require('../utility/general');
 const {
   requestError,
   serverError,
@@ -23,8 +18,8 @@ const {
  */
 router.get('/', function (req, res) {
   User.find({}, function (err, users) {
-    if (err) return res.status(500).send(err);
-    res.status(200).send(users);
+    if (err) return requestError(res, err);
+    success(res, users);
   });
 });
 
@@ -37,8 +32,7 @@ router.get('/', function (req, res) {
  */
 router.post('/register', function (req, res) {
   bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
-    // if (err) return res.status(500).json(errorToJson(err));
-    if (err) return res.status(500).jsend.error(errorToJsendError(err));
+    if (err) return serverError(res, err);
     let newUser = {
       username: req.body.username,
       password: hashedPassword,
@@ -49,8 +43,7 @@ router.post('/register', function (req, res) {
       newUser,
       function (err, user) {
         if (err) return requestError(res, err);
-        // if (err) return res.status(400).jsend.error(errorToJsendFail(err));
-        res.status(200).send(user);
+        success(res, user);
       }
     );
   });
@@ -66,16 +59,23 @@ router.post('/register', function (req, res) {
  * }
  */
 router.post('/login', function(req, res) {
+  if (!req.body.username) {
+    return requestError(res, new Error('no username given'));
+  }
+
   User.findOne({username: req.body.username}, (err, user) => {
-    if (err) return res.status(500).json(err);
-    if (!user) return res.status(400).json(`no such user, username = ${req.body.username}`);
+    if (err) return requestError(res, err);
+    if (!user) {
+      let msg = `could not find user, ${req.body.username}`;
+      return requestError(res, new Error(msg));
+    }
 
     bcrypt.compare(req.body.password, user.password, (err, matched) => {
-      if (err) return res.status(500).json(err);
+      if (err) return serverError(res, err);
       if (matched) {
-        return res.status(200).json(user);
+        return success(res, user);
       }
-      return res.status(400).json({"message": "password mismatch"});
+      requestError(res, new Error('incorrect password'));
     });
   });
 });
@@ -84,10 +84,18 @@ router.post('/login', function(req, res) {
  * @returns a specific users queried by their _id field from db.users
  */
 router.get('/:id', function (req, res) {
-  User.findById(req.params.id, function (err, user) {
-    if (err) return res.status(500).send("There was a problem finding the users.");
-    if (!user) return res.status(404).send("No users found.");
-    res.status(200).send(user);
+  if (!req.params.id) {
+    return requestError(res, new Error('no id given in url route'));
+  }
+
+  User.findOne({_id: ObjectId(req.params.id)}, function (err, user) {
+    if (err) return requestError(res, err);
+    if (!user) {
+      let msg = `could not find user with _id = ${req.params.id}`;
+      return requestError(res, new Error(msg));
+    }
+
+    success(res, user);
   });
 });
 
