@@ -62,6 +62,7 @@ export default class GameScreen extends React.Component {
     componentDidMount(){
         this._loadInitialState().done();
         //create a timer that exists in the component to update geolocation of the player
+        this.updateGeolocation();
         let timer = setInterval(this.updateGeolocation, 5000);
         this.setState({timer});
     }
@@ -82,39 +83,6 @@ export default class GameScreen extends React.Component {
             alert('error getting game ID');
             this.props.navigation.pop(1);
         }
-        this.game.getGame(this.state.gameID)
-            .then((response) => {
-
-            })
-            .catch((err) =>{
-                alert('getGame' + err);
-            });
-
-        //get geolocation of intial region and initial user position
-        let position = await this.getGeolocation();
-        //initial region set
-        let region = {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.0011
-        };
-        this.setState({region,regionSet:true})
-
-        //intial user set
-        let coord = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-        };
-
-        //update player markers
-        let playerMarkersCopy = JSON.parse(JSON.stringify(this.state.playerMarkers));
-        playerMarkersCopy[0].coordinate = coord;    //update user
-        //TODO
-        //playerMarkersCopy[1].coordinate =         //update enemy
-        this.setState({
-            playerMarkers: playerMarkersCopy
-        });
     }
 
     getGeolocation() {
