@@ -2,8 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpacity, AsyncStorage, Keyboard } from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 
-import BaseConnection from 'kingdoms-game-sdk/BaseConnection';
-import User from 'kingdoms-game-sdk/User';
+import BaseConnection from 'kingdoms-game-sdk/src/BaseConnection';
+import User from 'kingdoms-game-sdk/src/User';
 
 import IP from '../../config';
 

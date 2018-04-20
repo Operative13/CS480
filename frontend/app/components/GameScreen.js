@@ -4,8 +4,8 @@ import { StackNavigator } from 'react-navigation'; // Version can be specified i
 import MapView from 'react-native-maps';
 import {Marker} from 'react-native-maps';
 
-import BaseConnection from 'kingdoms-game-sdk/BaseConnection';
-import Game from 'kingdoms-game-sdk/Game';
+import BaseConnection from 'kingdoms-game-sdk/src/BaseConnection';
+import Game from 'kingdoms-game-sdk/src/Game';
 
 import IP from '../../config';
 
@@ -124,10 +124,16 @@ export default class GameScreen extends React.Component {
     }
 
     updateGeolocation = async () => {
-        console.log('updateGeolocation');
         try{
             //get geolocation of user
             let position = await this.getGeolocation();
+            this.game.getGame(this.state.gameID)
+                .then((response) => {
+
+                })
+                .catch((err) =>{
+                    alert('getGame' + err);
+                });
 
             if(!this.state.regionSet){
                 let region = {
@@ -143,19 +149,33 @@ export default class GameScreen extends React.Component {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
             };
+            let coordEnemy = {
+                latitude: 0,
+                longitude: 0,
+            };
 
             //update player markers
             let playerMarkersCopy = JSON.parse(JSON.stringify(this.state.playerMarkers));
             playerMarkersCopy[0].coordinate = coord;    //update user
             //TODO
-            //playerMarkersCopy[1].coordinate =         //update enemy
+            for (let userId in this.game.geolocations){
+                if(this.game.geolocations.hasOwnProperty(userId) && userId != this.state.userID){
+                    coordEnemy.latitude = this.game.geolocations[userId].lat;
+                    coordEnemy.longitude = this.game.geolocations[userId].lon;
+                    console.log(coordEnemy.latitude );
+                    console.log(coordEnemy.longitude);
+                }
+            }
+            playerMarkersCopy[1].coordinate = coordEnemy; //update enemy
             this.setState({
                 playerMarkers: playerMarkersCopy
             })
 
+            console.log(JSON.stringify(this.state.playerMarkers));
+
 
             //update geolocation on server
-            this.game.setGeolocation(this.state.userID, position.coords.latitude, position.coords.longitude)
+            this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
                 .then((response) => {
                     this.setState({numErrors: 0});
                 })

@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 
-import BaseConnection from 'kingdoms-game-sdk/BaseConnection';
-import Game from 'kingdoms-game-sdk/Game';
+import BaseConnection from 'kingdoms-game-sdk/src/BaseConnection';
+import Game from 'kingdoms-game-sdk/src/Game';
 
 import IP from '../../config';
 
