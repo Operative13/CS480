@@ -162,7 +162,7 @@ export default class GameScreen extends React.Component {
         catch (error){
             let numUpdateErrors = this.state.numUpdateErrors + 1;
             this.setState({numUpdateErrors: numUpdateErrors});
-            if(this.state.numUpdateErrors > 5){
+            if(this.state.numUpdateErrors === 5){
                 alert('updateGeolocation: ' + error);
             }
         }
