@@ -45,6 +45,7 @@ export default class GameScreen extends React.Component {
             regionSet: false,
             timer: null,
             numErrors: 0,
+            numUpdateErrors: 0,
         };
         //initial game id
         const {params} = this.props.navigation.state;
@@ -130,16 +131,12 @@ export default class GameScreen extends React.Component {
                 if(this.game.geolocations.hasOwnProperty(userId) && userId != this.state.userID){
                     coordEnemy.latitude = this.game.geolocations[userId].lat;
                     coordEnemy.longitude = this.game.geolocations[userId].lon;
-                    console.log(coordEnemy.latitude );
-                    console.log(coordEnemy.longitude);
                 }
             }
             playerMarkersCopy[1].coordinate = coordEnemy; //update enemy
             this.setState({
                 playerMarkers: playerMarkersCopy
             })
-
-            console.log(JSON.stringify(this.state.playerMarkers));
 
 
             //update geolocation on server
@@ -158,10 +155,16 @@ export default class GameScreen extends React.Component {
                     //alert(this.state.userID +' '+ this.state.playerMarkers[0].coordinate.longitude + ' ' + this.state.playerMarkers[0].coordinate.latitude + ' updateGeolocation: ' + err);
                 });
 
+
+            this.setState({numUpdateErrors: 0});
             //alert(' test: ' + this.state.userID +' '+ this.state.playerMarkers[0].coordinate.longitude + ' ' + this.state.playerMarkers[0].coordinate.latitude );
         }
         catch (error){
-            alert('updateGeolocation: ' + error);
+            let numUpdateErrors = this.state.numUpdateErrors + 1;
+            this.setState({numUpdateErrors: numUpdateErrors});
+            if(this.state.numUpdateErrors > 5){
+                alert('updateGeolocation: ' + error);
+            }
         }
 
     }
