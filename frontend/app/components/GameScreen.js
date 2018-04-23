@@ -88,10 +88,14 @@ export default class GameScreen extends React.Component {
 
     getGeolocation() {
         return new Promise((resolve,reject) => {
-            navigator.geolocation.getCurrentPosition(resolve,reject,{ enableHighAccuracy: true, timeout: 10000});
+            navigator.geolocation.getCurrentPosition(resolve,reject,{ enableHighAccuracy: true, timeout: 10000, maximumAge: 500});
         });
     }
 
+    /**
+     *
+     * @returns {Promise<void>}
+     */
     updateGeolocation = async () => {
         try{
             //get geolocation of user
@@ -222,6 +226,7 @@ export default class GameScreen extends React.Component {
         //alert('ending game');
         this.game.leave(this.state.userID, this.state.gameID);
         AsyncStorage.removeItem('gameID');
+        clearInterval(this.state.timer);
         this.props.navigation.navigate('GameOver', {isWinner: this.state.isWinner});
     }
 
