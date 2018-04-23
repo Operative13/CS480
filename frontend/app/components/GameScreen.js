@@ -53,19 +53,22 @@ export default class GameScreen extends React.Component {
 
         let baseConn = new BaseConnection( IP ,'3000');
         this.game = new Game(baseConn);
+        this.game.id = this.state.gameID;
 
+        // watch the geolocation and call callback when it changes
+        this.state.watchID = navigator.geolocation.watchPosition(
+              this.updateGeolocation,
+              (err) => { console.error(err); },
+              {enableHighAccuracy: true, timeout: 10000}
+        );
     }
 
     componentWillUnmount(){
-        clearInterval(this.state.timer);
+        navigator.geolocation.clearWatch(this.state.watchID);
     }
 
     componentDidMount(){
         this._loadInitialState().done();
-        //create a timer that exists in the component to update geolocation of the player
-        this.updateGeolocation();
-        let timer = setInterval(this.updateGeolocation, 5000);
-        this.setState({timer});
     }
 
     _loadInitialState = async () => {
@@ -86,96 +89,66 @@ export default class GameScreen extends React.Component {
         }
     }
 
-    getGeolocation() {
-        return new Promise((resolve,reject) => {
-            navigator.geolocation.getCurrentPosition(resolve,reject,{ enableHighAccuracy: true, timeout: 10000});
-        });
-    }
-
   /**
-   * It should:
-   *
-   * Get real geolocation of self via GPS & web api
    * -> update game doc with new geolocation of self
    * --> update map markers (this.state.playerMarkers) with all coordinates
    *
+   * @param position - position provided by navigator.watchPosition , contains
+   *    info on lon and lat of self
    * @returns {Promise<void>}
    */
-  updateGeolocation = async () => {
-        try{
-            //get geolocation of user
-            let position = await this.getGeolocation();
-            this.game.getGame(this.state.gameID)
-                .then((response) => {
-
-                })
-                .catch((err) =>{
-                    alert('getGame' + err);
-                });
-
-            if(!this.state.regionSet){
-                let region = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.0011
-                };
-                this.setState({region,regionSet:true})
-            }
-
-            let coord = {
+  updateGeolocation = (position) => {
+        if(!this.state.regionSet){
+            let region = {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.0011
             };
-            let coordEnemy = {
-                latitude: 0,
-                longitude: 0,
-            };
+            this.setState({region,regionSet:true})
+        }
 
-            //update player markers
-            let playerMarkersCopy = JSON.parse(JSON.stringify(this.state.playerMarkers));
-            playerMarkersCopy[0].coordinate = coord;    //update user
-            //TODO
-            for (let userId in this.game.geolocations){
-                if(this.game.geolocations.hasOwnProperty(userId) && userId != this.state.userID){
-                    coordEnemy.latitude = this.game.geolocations[userId].lat;
-                    coordEnemy.longitude = this.game.geolocations[userId].lon;
-                }
-            }
-            playerMarkersCopy[1].coordinate = coordEnemy; //update enemy
-            this.setState({
-                playerMarkers: playerMarkersCopy
-            })
+        let coord = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+        };
+        let coordEnemy = {
+            latitude: 0,
+            longitude: 0,
+        };
 
+        //update player markers
+        let playerMarkersCopy = JSON.parse(JSON.stringify(this.state.playerMarkers));
+        playerMarkersCopy[0].coordinate = coord;    //update user
 
-            //update geolocation on server
-            this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
-                .then((response) => {
-                    this.setState({numErrors: 0});
-                })
-                .catch((err) =>{
-                    //TODO
-                    //figure out what the specific way to check for "TypeError: Network request failed" is
-                    let numErrors = this.state.numErrors + 1;
-                    this.setState({numErrors: numErrors});
-                    if(numErrors > 5){
-                        alert(err);
+        //update geolocation on server
+        this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
+            .then((response) => {
+                console.log(response);
+                this.setState({numErrors: 0});
+                for (let userId in this.game.geolocations){
+                    if(response.geolocations.hasOwnProperty(userId) && userId !== this.state.userID){
+                        coordEnemy.latitude = response.geolocations[userId].lat;
+                        coordEnemy.longitude = response.geolocations[userId].lon;
                     }
-                    //alert(this.state.userID +' '+ this.state.playerMarkers[0].coordinate.longitude + ' ' + this.state.playerMarkers[0].coordinate.latitude + ' updateGeolocation: ' + err);
+                }
+                playerMarkersCopy[1].coordinate = coordEnemy; //update enemy
+                this.setState({
+                    playerMarkers: playerMarkersCopy
                 });
+            })
+            .catch((err) =>{
+                console.error(err);
+                //TODO
+                //figure out what the specific way to check for "TypeError: Network request failed" is
+                let numErrors = this.state.numErrors + 1;
+                this.setState({numErrors: numErrors});
+                if(numErrors > 5){
+                    alert(err);
+                }
+            });
 
-
-            this.setState({numUpdateErrors: 0});
-            //alert(' test: ' + this.state.userID +' '+ this.state.playerMarkers[0].coordinate.longitude + ' ' + this.state.playerMarkers[0].coordinate.latitude );
-        }
-        catch (error){
-            let numUpdateErrors = this.state.numUpdateErrors + 1;
-            this.setState({numUpdateErrors: numUpdateErrors});
-            if(this.state.numUpdateErrors === 5){
-                alert('updateGeolocation: ' + error);
-            }
-        }
-
+        this.setState({numUpdateErrors: 0});
     }
 
     onRegionChange(region) {
@@ -190,7 +163,7 @@ export default class GameScreen extends React.Component {
                 <View style={styles.container}>
                     <MapView style={styles.map}
                         region={this.state.region}
-                        onRegionChangeComplete={region => this.onRegionChange(region)}
+                        onRegionChangeComplete={(region) => this.onRegionChange(region)}
                     >
                         {this.state.playerMarkers.map(marker => (
                             <Marker
