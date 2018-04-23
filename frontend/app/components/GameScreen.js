@@ -69,6 +69,10 @@ export default class GameScreen extends React.Component {
 
     componentDidMount(){
         this._loadInitialState().done();
+        //create a timer that exists in the component to update geolocation of the player
+        this.updateGeolocation();
+        let timer = setInterval(this.updateGeolocation, 5000);
+        this.setState({timer});
     }
 
     _loadInitialState = async () => {
@@ -97,13 +101,31 @@ export default class GameScreen extends React.Component {
    *    info on lon and lat of self
    * @returns {Promise<void>}
    */
-  updateGeolocation = (position) => {
-        if(!this.state.regionSet){
-            let region = {
+  updateGeolocation = async () => {
+        try{
+            //get geolocation of user
+            let position = await this.getGeolocation();
+            this.game.getGame(this.state.gameID)
+                .then((response) => {
+
+                })
+                .catch((err) =>{
+                    alert('getGame' + err);
+                });
+
+            if(!this.state.regionSet){
+                let region = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.0011
+                };
+                this.setState({region,regionSet:true})
+            }
+
+            let coord = {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.0011
             };
             this.setState({region,regionSet:true})
         }
@@ -124,7 +146,6 @@ export default class GameScreen extends React.Component {
         //update geolocation on server
         this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
             .then((response) => {
-                console.log(response);
                 this.setState({numErrors: 0});
                 for (let userId in this.game.geolocations){
                     if(response.geolocations.hasOwnProperty(userId) && userId !== this.state.userID){
@@ -163,7 +184,7 @@ export default class GameScreen extends React.Component {
                 <View style={styles.container}>
                     <MapView style={styles.map}
                         region={this.state.region}
-                        onRegionChangeComplete={(region) => this.onRegionChange(region)}
+                        onRegionChangeComplete={region => this.onRegionChange(region)}
                     >
                         {this.state.playerMarkers.map(marker => (
                             <Marker
