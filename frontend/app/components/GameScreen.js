@@ -92,11 +92,18 @@ export default class GameScreen extends React.Component {
         });
     }
 
-    /**
-     *
-     * @returns {Promise<void>}
-     */
-    updateGeolocation = async () => {
+    
+  /**
+   * It should:
+   *
+   * Get real geolocation of self via GPS & web api
+   * -> update game doc with new geolocation of self
+   * --> update map markers (this.state.playerMarkers) with all coordinates
+   *
+   * @returns {Promise<void>}
+   */
+  updateGeolocation = async () => {
+
         try{
             //get geolocation of user
             let position = await this.getGeolocation();
