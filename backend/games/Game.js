@@ -17,6 +17,13 @@ const GameSchema = new Schema({
     type: Schema.Types.Mixed,
     default: {},
   },
+
+  // as circular regions or nodes or zones this can look something like
+  // [{lon: 123, lat: 123, radius: {deltaLon: 0.00005, deltaLat: 0.000045}]
+  regions: {
+    type: [{type: Schema.Types.Mixed}],
+    default: [],
+  }
 });
 
 mongoose.model('Game', GameSchema);

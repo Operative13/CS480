@@ -8,16 +8,11 @@ const ObjectId = require('mongoose').Types.ObjectId;
 // local imports
 const Game = new require('./Game');
 const GameConfig = require('./GameConfiguration.js');
-const {
-  RequestRejectedException,
-  BackendException
-} = require('../exceptions/exceptions.js');
 const UserFunctions = require('../users/UserFunctions');
 const { joinGame, joinGameByName } = require('./GameFunctions');
 const GameFunctions = require('./GameFunctions');
-const asJsonString = require('../utility/general').asJsonString;
-const asJson = require('../utility/general').asJson;
-const { errorToJson } = require('../exceptions/exceptions');
+const fiftyMetersInDeltaLatitude = GameFunctions.fiftyMetersInDeltaLatitude;
+const fiftyMetersInDeltaLongitude = GameFunctions.fiftyMetersInDeltaLongitude;
 const {
   requestError,
   serverError,
@@ -47,6 +42,14 @@ router.get('/', function(req, res) {
  * }
  */
 router.post('/create', function(req, res) {
+  let lat = req.body.lat;
+  let lon = req.body.lon;
+
+  if (!req.body.lat || !req.body.lon) {
+    let msg = `lat & lon should be defined, lat = ${lat} lon = ${lon}`;
+    return requestError(res, new Error(msg));
+  }
+
   UserFunctions.isUser(req.body.myUserId)
     .then(isUser => {
       if (!isUser) {
@@ -54,9 +57,14 @@ router.post('/create', function(req, res) {
         return requestError(res, new Error(msg));
       }
 
-      Game.create({
+      let gameInfo = {
         name: req.body.name,
-      }, (err, game) => {
+        regions: GameFunctions.createCircularRegions(lat, lon)
+      };
+
+      Game.create(
+        gameInfo,
+        (err, game) => {
         // error occurred and it's not because this games room name already
         // exists or games was full, but we don't want to join it here
         if (err && (err.code !== 11000 || !req.body.joinIfExists)) {

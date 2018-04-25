@@ -187,4 +187,86 @@ function isUserInAGame(userId) {
   })
 }
 
-module.exports = {joinGame, joinGameByName, removeUser};
+/**
+ * accurate by +/- 1 meter. delta lat equal to 50m
+ */
+let fiftyMetersInDeltaLatitude = 0.00045;
+
+/**
+ * accurate by +/- 1 meter. delta lon equal to 50m
+ */
+let fiftyMetersInDeltaLongitude = 0.00055;
+
+/**
+ * Measure the distance in meters between two points
+ * (in latitude and longitude)
+ * source of code: https://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
+ * @param lat1
+ * @param lon1
+ * @param lat2
+ * @param lon2
+ * @returns {number} distance in meters
+ */
+function measure(lat1, lon1, lat2, lon2){  // generally used geo measurement function
+  let R = 6378.137; // Radius of earth in KM
+  let dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
+  let dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
+  let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+  Math.sin(dLon/2) * Math.sin(dLon/2);
+  let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  let d = R * c;
+  return d * 1000; // meters
+}
+
+/**
+ * Create numberOfRegions regions whose boundaries are within
+ * the main circular boundary or playing field.
+ * @param centerLat
+ * @param centerLon
+ * @param regionRadius
+ * @param mainBoundaryLimit
+ * @param numberOfRegions
+ */
+function createCircularRegions(centerLat, centerLon, regionRadius=50,
+                               numberOfRegions=3, mainBoundaryLimit=400) {
+  if (regionRadius !== 50) {
+    throw new Error('createCircularRegions does not support creating regions of radius 50 yet.');
+  }
+
+  let [deltaLon, deltaLat] = [fiftyMetersInDeltaLongitude, fiftyMetersInDeltaLatitude];
+  // scale factor for main boundary
+  let scaleFactor = (mainBoundaryLimit - 50) / 50;
+  // delta lat and lon for main boundary
+  let mainDeltaLat = deltaLat * scaleFactor;
+  let mainDeltaLon = deltaLon * scaleFactor;
+
+  let getRandomNumber = (min, max) => Math.random() * (max - min) + min;
+  let regions = [];
+
+  for (let i = 0; i < numberOfRegions; i++) {
+    let lat = getRandomNumber(centerLat - mainDeltaLat, centerLat + mainDeltaLat);
+    let lon = getRandomNumber(centerLon - mainDeltaLon, centerLon + mainDeltaLon);
+
+    // all the info required to define a single circular zone
+    let region = {
+      lat,
+      lon,
+      radius: {
+        deltaLat,
+        deltaLon,
+      }
+    };
+
+    regions.push(region);
+  }
+
+  return regions;
+}
+
+module.exports = {
+  joinGame,
+  joinGameByName,
+  removeUser,
+  createCircularRegions
+};
