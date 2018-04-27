@@ -224,19 +224,24 @@ function measure(lat1, lon1, lat2, lon2){  // generally used geo measurement fun
  * the main circular boundary or playing field.
  * @param centerLat
  * @param centerLon
- * @param regionRadius
+ * @param minRadius {Number} - in meters
+ * @param maxRadius {Number} - in meters
+ * @param owner
+ * @param regionType
  * @param mainBoundaryLimit
  * @param numberOfRegions
  */
-function createCircularRegions(centerLat, centerLon, regionRadius=50,
+function createCircularRegions(centerLat, centerLon, minRadius=20, maxRadius=50,
+                               owner=null, regionType="fort",
                                numberOfRegions=3, mainBoundaryLimit=400) {
-  if (regionRadius !== 50) {
-    throw new Error('createCircularRegions does not support creating regions of radius 50 yet.');
+  // validate regionType
+  if (!GameConfig.regionTypes.hasOwnProperty(regionType)) {
+    throw new Error(`invalid regionType given, regionType = ${regionType}`);
   }
 
   let [deltaLon, deltaLat] = [fiftyMetersInDeltaLongitude, fiftyMetersInDeltaLatitude];
   // scale factor for main boundary
-  let scaleFactor = (mainBoundaryLimit - 50) / 50;
+  let scaleFactor = mainBoundaryLimit / 50;
   // delta lat and lon for main boundary
   let mainDeltaLat = deltaLat * scaleFactor;
   let mainDeltaLon = deltaLon * scaleFactor;
@@ -252,10 +257,9 @@ function createCircularRegions(centerLat, centerLon, regionRadius=50,
     let region = {
       lat,
       lon,
-      radius: {
-        deltaLat,
-        deltaLon,
-      }
+      radius: getRandomNumber(minRadius, maxRadius),
+      owner,
+      type: regionType,
     };
 
     regions.push(region);

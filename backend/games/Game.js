@@ -19,7 +19,7 @@ const GameSchema = new Schema({
   },
 
   // as circular regions or nodes or zones this can look something like
-  // [{lon: 123, lat: 123, radius: {deltaLon: 0.00005, deltaLat: 0.000045}]
+  // [{lon: 123, lat: 123, radius: 44, owner: "123abc", type: "fort"}]
   regions: {
     type: [{type: Schema.Types.Mixed}],
     default: [],
