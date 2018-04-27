@@ -204,6 +204,7 @@ export default class GameScreen extends React.Component {
         //alert('ending game');
         this.game.leave(this.state.userID, this.state.gameID);
         AsyncStorage.removeItem('gameID');
+        navigator.geolocation.clearWatch(this.state.watchID);
         this.props.navigation.navigate('GameOver', {isWinner: this.state.isWinner});
     }
 
