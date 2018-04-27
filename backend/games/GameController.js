@@ -230,11 +230,17 @@ router.post('/:id', function(req, res) {
       game.geolocations[req.body.myUserId]['lon'] = req.body.lon;
 
       game.markModified('geolocations');
-      game.save();
+      game.save()
+        .then(savedGame => {
+          // update capture zones ownerships
+          GameFunctions.updateRegions(savedGame)
+            .then(savedGame2 => success(res, savedGame2))
+            .catch(err => serverError(res, err))
+        })
+        .catch(err => serverError(res, err))
     } catch (error) {
       return requestError(res, error);
     }
-    success(res, game);
   });
 });
 

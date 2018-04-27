@@ -8,8 +8,9 @@ module.exports = class Game {
   constructor(baseConnection) {
     this.id = null;
     this.name = null;
-    this.players = [];
+    this.users = [];
     this.geolocations = {};
+    this.regions = [];
 
     this._url = `${baseConnection.baseUrl}/api/games`;
   }
@@ -17,9 +18,11 @@ module.exports = class Game {
   _updateGame(gameDocumentJson) {
     if (gameDocumentJson._id) this.id = gameDocumentJson._id;
     if (gameDocumentJson.name) this.name = gameDocumentJson.name;
-    if (gameDocumentJson.players) this.players = gameDocumentJson.players;
+    if (gameDocumentJson.users) this.users = gameDocumentJson.users;
     if (gameDocumentJson.geolocations)
       this.geolocations = gameDocumentJson.geolocations;
+    if (gameDocumentJson.regions)
+      this.regions = gameDocumentJson.regions;
   }
 
   /**
@@ -224,18 +227,27 @@ module.exports = class Game {
   }
 
   /**
+   * Takes puts the attributes associated with the game doc for
+   * this game instance and puts them in an object
+   * @returns {{id: null|*, name: null|*, users: Array|*, geolocations: {}|*}}
+   */
+  toJson() {
+    return {
+      id: this.id,
+      name: this.name,
+      users: this.users,
+      geolocations: this.geolocations
+    };
+  }
+
+  /**
    * Convert this instance to its string representation
-   * @returns {string} JSON that holds info of the id, name, players,
+   * @returns {string} JSON that holds info of the id, name, users,
    * and geolocations associated with this instance
    */
   toString() {
     return JSON.stringify(
-      {
-        id: this.id,
-        name: this.name,
-        players: this.players,
-        geolocations: this.geolocations
-      },
+      this.toJson(),
       null,
       2
     );

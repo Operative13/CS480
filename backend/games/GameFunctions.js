@@ -207,7 +207,7 @@ let fiftyMetersInDeltaLongitude = 0.00055;
  * @param lon2
  * @returns {number} distance in meters
  */
-function measure(lat1, lon1, lat2, lon2){  // generally used geo measurement function
+function measure(lat1, lon1, lat2, lon2) {  // generally used geo measurement function
   let R = 6378.137; // Radius of earth in KM
   let dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
   let dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
@@ -228,8 +228,12 @@ function measure(lat1, lon1, lat2, lon2){  // generally used geo measurement fun
  * @param maxRadius {Number} - in meters
  * @param owner
  * @param regionType
- * @param mainBoundaryLimit
  * @param numberOfRegions
+ * @param mainBoundaryLimit {Number} - max distance a randomly placed region
+ *  can be created (in meters)
+ * @returns {Array<Object>} the array of regions where each element is an
+ *  object that contains a lat, lon, radius, owner, type
+ * @throws {Error} if invalid regionType is given
  */
 function createCircularRegions(centerLat, centerLon, minRadius=20, maxRadius=50,
                                owner=null, regionType="fort",
@@ -242,6 +246,7 @@ function createCircularRegions(centerLat, centerLon, minRadius=20, maxRadius=50,
   let [deltaLon, deltaLat] = [fiftyMetersInDeltaLongitude, fiftyMetersInDeltaLatitude];
   // scale factor for main boundary
   let scaleFactor = mainBoundaryLimit / 50;
+
   // delta lat and lon for main boundary
   let mainDeltaLat = deltaLat * scaleFactor;
   let mainDeltaLon = deltaLon * scaleFactor;
@@ -268,9 +273,61 @@ function createCircularRegions(centerLat, centerLon, minRadius=20, maxRadius=50,
   return regions;
 }
 
+/**
+ * Checks the users geolocations and updates the owner of each region
+ * if there's a user in that capture region. If two users stand in the same
+ * region, then the owner does not change.
+ * @param game {mongoose.Document} - the game that holds info on users and
+ *  regions for the game instance
+ * @returns {Promise<mongoose.Document>} when the document is finished being
+ *  modified and saved in MongoDB, return it in the resolution
+ */
+function updateRegions(game) {
+  let updatedRegions = [];
+
+  // check each region
+  for (let region of game['regions']) {
+    let newOwner = '';
+
+    for (let userId in game['geolocations']) {
+      let geolocation = game['geolocations'][userId];
+
+      // dist in meters between user location & capture zone center position
+      let distance = measure(geolocation['lat'], geolocation['lon'],
+        region['lat'], region['lon']);
+
+      // this user is within the capture zone
+      if (distance < region['radius']) {
+        // another user is within the same capture zone
+        if (newOwner) {
+          newOwner = region['owner'];
+        }
+        // this is the 1st user detected in the zone & maybe the only user
+        else {
+          newOwner = userId;
+        }
+      }
+    } // end users loop
+
+    if (newOwner)
+      region['owner'] = newOwner;
+    updatedRegions.push(region);
+  } // end regions loop
+
+  game['regions'] = updatedRegions;
+  game.markModified('regions');
+
+  return new Promise((resolve, reject) => {
+    game.save()
+      .then(game => resolve(game))
+      .catch(err => reject(err))
+  })
+}
+
 module.exports = {
   joinGame,
   joinGameByName,
   removeUser,
-  createCircularRegions
+  createCircularRegions,
+  updateRegions,
 };

@@ -162,16 +162,50 @@ describe('Game#setGeolocation: set james\'s geolocation to 10, 50 (lon, lat)', (
   })
 });
 
-describe('Game#leave: have james, a user, leave the game', () => {
-  it('should remove james from the game then delete the empty game', function(done) {
-    this.timeout(4000);
-    game.leave(userJames.id)
+describe('Game#join: have john join the game james is in', () => {
+  it('should put john in the game', async () => {
+    await game.join(userJohn.id, null, userJames.username)
       .then(json => {
-        assert(json.users.length === 0);
+        console.log(json);
+        assert(json.users.length === 2, 'users contains two users');
+        assert(Object.keys(json.geolocations).length === 2);
+      })
+      .catch(err => {throw new Error(err['message'] || err.data)})
+  })
+});
+
+describe('Game#setGeolocation: set john\'s geolocation to 123, 123 (lon, lat)', () => {
+  it('should change the info stored in the game doc & update the region owner', function(done) {
+    game.setGeolocation(userJohn.id, 123, 123)
+      .then(json => {
+        // console.log(json);
+        console.log(game.toString());
+        assert(json.geolocations[userJames.id]['lon'] === 123);
+        assert(json.geolocations[userJames.id]['lat'] === 123);
         done();
       })
       .catch(err => {
-        done(new Error(err.message));
+        console.log(err);
+        done(new Error(err.message || err.data))
+      });
+  })
+});
+
+describe('Game#leave: have each user leave the game', () => {
+  it('should remove james & john from the game then delete the empty game', () => {
+    return game.leave(userJames.id)
+      .then(json => {
+        assert(json.users.length === 1);
+        game.leave(userJohn.id)
+          .then(json => {
+            assert(json.users.length === 0);
+          })
+          .catch(err => {
+            throw new Error(err.message);
+          })
+      })
+      .catch(err => {
+        throw new Error(err.message);
       })
   });
 });
@@ -179,7 +213,7 @@ describe('Game#leave: have james, a user, leave the game', () => {
 /**
  * Remove all data from db.users and db.games
  */
-after(function() {
+before(function() {
   UserModel.remove({})
     .catch(err => err);
 
