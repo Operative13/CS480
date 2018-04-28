@@ -235,9 +235,9 @@ function measure(lat1, lon1, lat2, lon2) {  // generally used geo measurement fu
  *  object that contains a lat, lon, radius, owner, type
  * @throws {Error} if invalid regionType is given
  */
-function createCircularRegions(centerLat, centerLon, minRadius=20, maxRadius=50,
+function createCircularRegions(centerLat, centerLon, minRadius=5, maxRadius=20,
                                owner=null, regionType="fort",
-                               numberOfRegions=3, mainBoundaryLimit=400) {
+                               numberOfRegions=3, mainBoundaryLimit=150) {
   // validate regionType
   if (!GameConfig.regionTypes.hasOwnProperty(regionType)) {
     throw new Error(`invalid regionType given, regionType = ${regionType}`);

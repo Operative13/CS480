@@ -60,8 +60,7 @@ router.post('/create', function(req, res) {
       let gameInfo = {
         name: req.body.name,
         regions: GameFunctions.createCircularRegions(
-          lat, lon, minRadius=20, maxRadius=50, owner=req.body.myUserId,
-          regionType="fort"
+          lat, lon, minRadius=5, maxRadius=20, owner=null, regionType="fort"
         ),
       };
 

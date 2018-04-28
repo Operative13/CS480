@@ -14,6 +14,7 @@ const Promise = require('promise');
 const BaseConnection = require('./lib/BaseConnection');
 const User = require('./lib/User');
 const Game = require('./lib/Game');
+
 const baseConnection = new BaseConnection('localhost', '3000');
 const userJames = new User(baseConnection);
 const userJohn = new User(baseConnection);
@@ -31,6 +32,18 @@ before(function() {
   let conn = mongoose.createConnection(mongoDbUri);
   UserModel = conn.model('User', UserModelImported.schema);
   GameModel = conn.model('Game', GameModelImported.schema);
+});
+
+
+/**
+ * Remove all data from db.users and db.games
+ */
+before(function() {
+  UserModel.remove({})
+    .catch(err => err);
+
+  GameModel.remove({})
+    .catch(err => err);
 });
 
 /**
@@ -166,7 +179,7 @@ describe('Game#join: have john join the game james is in', () => {
   it('should put john in the game', async () => {
     await game.join(userJohn.id, null, userJames.username)
       .then(json => {
-        console.log(json);
+        // console.log(json);
         assert(json.users.length === 2, 'users contains two users');
         assert(Object.keys(json.geolocations).length === 2);
       })
@@ -174,21 +187,22 @@ describe('Game#join: have john join the game james is in', () => {
   })
 });
 
-describe('Game#setGeolocation: set john\'s geolocation to 123, 123 (lon, lat)', () => {
-  it('should change the info stored in the game doc & update the region owner', function(done) {
-    game.setGeolocation(userJohn.id, 123, 123)
+describe('john joins the game directly on top of a capture region', () => {
+  it('should change that region owner to john\'s id', function() {
+    let lat = game.regions[0].lat;
+    let lon = game.regions[0].lon;
+
+    return game.setGeolocation(userJohn.id, lon, lat)
       .then(json => {
         // console.log(json);
         console.log(game.toString());
-        assert(json.geolocations[userJames.id]['lon'] === 123);
-        assert(json.geolocations[userJames.id]['lat'] === 123);
-        done();
+        assert(json.regions[0].owner === userJohn.id);
       })
       .catch(err => {
-        console.log(err);
-        done(new Error(err.message || err.data))
+        throw new Error(err.message || err.data);
+        // done(new Error(err.message || err.data))
       });
-  })
+  });
 });
 
 describe('Game#leave: have each user leave the game', () => {
@@ -208,15 +222,4 @@ describe('Game#leave: have each user leave the game', () => {
         throw new Error(err.message);
       })
   });
-});
-
-/**
- * Remove all data from db.users and db.games
- */
-before(function() {
-  UserModel.remove({})
-    .catch(err => err);
-
-  GameModel.remove({})
-    .catch(err => err);
 });

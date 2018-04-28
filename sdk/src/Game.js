@@ -236,7 +236,8 @@ module.exports = class Game {
       id: this.id,
       name: this.name,
       users: this.users,
-      geolocations: this.geolocations
+      geolocations: this.geolocations,
+      regions: this.regions,
     };
   }
 
