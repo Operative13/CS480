@@ -144,7 +144,7 @@ export default class GameSearch extends React.Component {
                 //alert(res._id);
                 Keyboard.dismiss();
                 AsyncStorage.setItem('gameID', res._id);
-                this.props.navigation.navigate('GameScreen', {gameID: res._id});
+                this.props.navigation.navigate('GameScreen', {gameID: res._id, lat: this.state.lat, lon: this.state.lon,});
             })
             .catch((err) => {
                 Keyboard.dismiss();
@@ -162,7 +162,7 @@ export default class GameSearch extends React.Component {
                 //if(res.gameName != gameName) {throw res};
                 Keyboard.dismiss();
                 AsyncStorage.setItem('gameID', res._id);
-                this.props.navigation.navigate('GameScreen', {gameID: res._id});
+                this.props.navigation.navigate('GameScreen', {gameID: res._id, lat: this.state.lat, lon: this.state.lon,});
             })
             .catch((err) => {
                 Keyboard.dismiss();
@@ -179,7 +179,7 @@ export default class GameSearch extends React.Component {
                 //if(res.username != joinUserName) {throw res};
                 Keyboard.dismiss();
                 AsyncStorage.setItem('gameID', res._id);
-                this.props.navigation.navigate('GameScreen', {gameID: res._id});
+                this.props.navigation.navigate('GameScreen', {gameID: res._id, lat: this.state.lat, lon: this.state.lon,});
             })
             .catch((err) => {
                 Keyboard.dismiss();

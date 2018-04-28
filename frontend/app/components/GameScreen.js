@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, AsyncStorage,} from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 import MapView from 'react-native-maps';
-import {Marker} from 'react-native-maps';
+import {Marker, Circle} from 'react-native-maps';
 
 import BaseConnection from 'kingdoms-game-sdk/src/BaseConnection';
 import Game from 'kingdoms-game-sdk/src/Game';
@@ -45,11 +45,19 @@ export default class GameScreen extends React.Component {
             regionSet: false,
             timer: null,
             numErrors: 0,
-            numUpdateErrors: 0,
+            nodes: [],
         };
         //initial game id
         const {params} = this.props.navigation.state;
         this.state.gameID = params.gameID;
+
+        //initial region
+        this.state.region = {
+            latitude: params.lat,
+            longitude: params.lon,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.0011,
+        };
 
         let baseConn = new BaseConnection( IP ,'3000');
         this.game = new Game(baseConn);
@@ -87,7 +95,7 @@ export default class GameScreen extends React.Component {
             alert('error getting game ID');
             this.props.navigation.pop(1);
         }
-    }
+    };
 
   /**
    * -> update game doc with new geolocation of self
@@ -108,34 +116,13 @@ export default class GameScreen extends React.Component {
             this.setState({region,regionSet:true})
         }
 
-        let coord = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-        };
-        let coordEnemy = {
-            latitude: 0,
-            longitude: 0,
-        };
-
-        //update player markers
-        let playerMarkersCopy = JSON.parse(JSON.stringify(this.state.playerMarkers));
-        playerMarkersCopy[0].coordinate = coord;    //update user
-
         //update geolocation on server
         this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
             .then((response) => {
                 console.log(response);
                 this.setState({numErrors: 0});
-                for (let userId in this.game.geolocations){
-                    if(response.geolocations.hasOwnProperty(userId) && userId !== this.state.userID){
-                        coordEnemy.latitude = response.geolocations[userId].lat;
-                        coordEnemy.longitude = response.geolocations[userId].lon;
-                    }
-                }
-                playerMarkersCopy[1].coordinate = coordEnemy; //update enemy
-                this.setState({
-                    playerMarkers: playerMarkersCopy
-                });
+                this.updateNodes(response);
+                this.updatePlayers(position,response);
             })
             .catch((err) =>{
                 console.error(err);
@@ -148,13 +135,82 @@ export default class GameScreen extends React.Component {
                 }
             });
 
-        this.setState({numUpdateErrors: 0});
-    }
+    };
 
-    onRegionChange(region) {
-        if(!this.state.regionSet) return;
-        this.setState({ region });
-    }
+    /**
+     *
+     * @param position - position provided by navigator.watchPosition , contains
+     *    info on lon and lat of self
+     * @param response - game document return from server, contains enemy coordinates
+     */
+    updatePlayers = (position, response) => {
+        let coordEnemy = {
+            latitude: 0,
+            longitude: 0,
+        };
+
+        for (let userId in this.game.geolocations){
+            if(response.geolocations.hasOwnProperty(userId) && userId !== this.state.userID){
+                coordEnemy.latitude = response.geolocations[userId].lat;
+                coordEnemy.longitude = response.geolocations[userId].lon;
+            }
+        }
+
+        let playerMarkers = [
+            {
+                coordinate: {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                },
+                title: "User",
+                pinColor: '#0000ff',
+            },
+            {
+                coordinate: coordEnemy,
+                title: "Enemy",
+                pinColor: '#ff0000',
+            },
+        ]
+        this.setState({
+            playerMarkers: playerMarkers
+        });
+    };
+
+    /**
+     * ->update nodes with response from server
+     * @param response - game document return from server, contains regions which have LatLang, radius, owner, and type
+     */
+    updateNodes = (response) => {
+        let nodes=[];
+        console.log("updateNodes: " + JSON.stringify(response));
+        for(let item in response.regions){
+            console.log("node: " + JSON.stringify(item));
+            let coord = {
+                latitude: response.regions[item].lat,
+                longitude: response.regions[item].lon,
+            };
+            let color;
+            if(response.regions[item].owner == null){
+                color = '#FAF0E6';
+            }
+            else if (response.regions[item].owner === this.state.userID){
+                color = '#0000ff';
+            }
+            else {
+                color = '#ff0000';
+            }
+
+            let node = {
+                coordinate: coord,
+                color: color,
+                title: response.regions[item].type,
+                radius: response.regions[item].radius,
+            };
+            nodes.push(node);
+        }
+        console.log("nodes: " + JSON.stringify(nodes));
+        this.setState({nodes: nodes});
+    };
 
 
     render(){
@@ -173,6 +229,21 @@ export default class GameScreen extends React.Component {
                                 pinColor ={marker.pinColor}
                             />
                         ))}
+                        {this.state.nodes.map( marker =>(
+                            <Marker
+                               coordinate={marker.coordinate}
+                               title={marker.title}
+                               pinColor={marker.color}
+                            />
+                        ))}
+                        {this.state.nodes.map( marker =>(
+                            <Circle
+                                center={marker.coordinate}
+                                radius={marker.radius}
+                                fillColor={marker.color}
+                            />
+                        ))}
+
                     </MapView>
                 </View>
                 <View style={styles.menuContainer}>
@@ -194,11 +265,21 @@ export default class GameScreen extends React.Component {
         );
     }
 
+    /**
+     * ->update MapView region
+     * @param region
+     */
+    onRegionChange(region) {
+        if(!this.state.regionSet) return;
+        this.setState({ region });
+    }
+
     quitGame = () => {
         this.game.leave(this.state.userID, this.state.gameID);
         AsyncStorage.removeItem('gameID');
         this.props.navigation.pop(2);
     }
+
 
     endGame = () => {
         //alert('ending game');
