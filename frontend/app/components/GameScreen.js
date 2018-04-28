@@ -63,20 +63,23 @@ export default class GameScreen extends React.Component {
         this.game = new Game(baseConn);
         this.game.id = this.state.gameID;
 
-        // watch the geolocation and call callback when it changes
-        this.state.watchID = navigator.geolocation.watchPosition(
-              this.updateGeolocation,
-              (err) => { console.error(err); },
-              {enableHighAccuracy: true, timeout: 10000}
-        );
+      /**
+       * getCurrentPosition will be called every x seconds where
+       * x is this value
+       * @type {number}
+       */
+        this.geolocationUpdatePeriod = 3000;
     }
 
     componentWillUnmount(){
-        navigator.geolocation.clearWatch(this.state.watchID);
+        clearInterval(this.state.timer);
     }
 
     componentDidMount(){
         this._loadInitialState().done();
+        this.updateGeolocation();
+        let timer = setInterval(this.updateGeolocation, this.geolocationUpdatePeriod);
+        this.setState({timer});
     }
 
     _loadInitialState = async () => {
@@ -98,43 +101,51 @@ export default class GameScreen extends React.Component {
     };
 
   /**
+   * Get the current latitude and longitude of self
    * -> update game doc with new geolocation of self
    * --> update map markers (this.state.playerMarkers) with all coordinates
+   * --> update nodes
    *
-   * @param position - position provided by navigator.watchPosition , contains
-   *    info on lon and lat of self
    * @returns {Promise<void>}
    */
-  updateGeolocation = (position) => {
-        if(!this.state.regionSet){
-            let region = {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.0011
-            };
-            this.setState({region,regionSet:true})
-        }
-
-        //update geolocation on server
-        this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
-            .then((response) => {
-                console.log(response);
-                this.setState({numErrors: 0});
-                this.updateNodes(response);
-                this.updatePlayers(position,response);
-            })
-            .catch((err) =>{
-                console.error(err);
-                //TODO
-                //figure out what the specific way to check for "TypeError: Network request failed" is
-                let numErrors = this.state.numErrors + 1;
-                this.setState({numErrors: numErrors});
-                if(numErrors > 5){
-                    alert(err);
+  updateGeolocation = () => {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                if(!this.state.regionSet){
+                    let region = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.0011
+                    };
+                    this.setState({region,regionSet:true})
                 }
-            });
 
+                //update geolocation on server
+                this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
+                    .then((response) => {
+                        console.log(response);
+                        this.setState({numErrors: 0});
+                        this.updateNodes(response);
+                        this.updatePlayers(position,response);
+                    })
+                    .catch((err) =>{
+                        console.error(err);
+                        //TODO
+                        //figure out what the specific way to check for "TypeError: Network request failed" is
+                        let numErrors = this.state.numErrors + 1;
+                        this.setState({numErrors: numErrors});
+                        if(numErrors > 5){
+                            alert(err);
+                        }
+                    });
+            },
+            (err) => {console.log(err)},
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+            }
+        );
     };
 
     /**
@@ -220,6 +231,7 @@ export default class GameScreen extends React.Component {
                     <MapView style={styles.map}
                         region={this.state.region}
                         onRegionChangeComplete={(region) => this.onRegionChange(region)}
+                        key={"gs-map-view"}
                     >
                         {this.state.playerMarkers.map(marker => (
                             <Marker
@@ -285,7 +297,7 @@ export default class GameScreen extends React.Component {
         //alert('ending game');
         this.game.leave(this.state.userID, this.state.gameID);
         AsyncStorage.removeItem('gameID');
-        navigator.geolocation.clearWatch(this.state.watchID);
+        clearInterval(this.state.timer);
         this.props.navigation.navigate('GameOver', {isWinner: this.state.isWinner});
     }
 
