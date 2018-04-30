@@ -9,7 +9,11 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const Game = new require('./Game');
 const GameConfig = require('./GameConfiguration.js');
 const UserFunctions = require('../users/UserFunctions');
-const { joinGame, joinGameByName } = require('./GameFunctions');
+const {
+  joinGame,
+  joinGameByName,
+  regionChangeEvent,
+} = require('./GameFunctions');
 const GameFunctions = require('./GameFunctions');
 const fiftyMetersInDeltaLatitude = GameFunctions.fiftyMetersInDeltaLatitude;
 const fiftyMetersInDeltaLongitude = GameFunctions.fiftyMetersInDeltaLongitude;
@@ -240,6 +244,12 @@ router.post('/:id', function(req, res) {
     } catch (error) {
       return requestError(res, error);
     }
+  });
+});
+
+router.ws('/:id/region-changed', function(req, ws) {
+  regionChangeEvent.on('event', function(regions) {
+    ws.send(JSON.stringify(regions));
   });
 });
 

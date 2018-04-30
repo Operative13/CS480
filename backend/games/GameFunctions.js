@@ -13,6 +13,8 @@ const {
   success,
 } = require('../utility/ResponseHandler');
 const ObjectId = require('mongoose').Types.ObjectId;
+const EventEmitter = require('events');
+const regionChangeEvent = new EventEmitter();
 
 
 /**
@@ -284,6 +286,7 @@ function createCircularRegions(centerLat, centerLon, minRadius=5, maxRadius=20,
  */
 function updateRegions(game) {
   let updatedRegions = [];
+  let aRegionWasChanged = false;
 
   // check each region
   for (let region of game['regions']) {
@@ -309,19 +312,27 @@ function updateRegions(game) {
       }
     } // end users loop
 
-    if (newOwner)
+    if (newOwner) {
       region['owner'] = newOwner;
+      aRegionWasChanged = true;
+    }
     updatedRegions.push(region);
   } // end regions loop
 
-  game['regions'] = updatedRegions;
-  game.markModified('regions');
+  if (aRegionWasChanged) {
+    regionChangeEvent.emit('event', updatedRegions);
 
-  return new Promise((resolve, reject) => {
-    game.save()
-      .then(game => resolve(game))
-      .catch(err => reject(err))
-  })
+    game['regions'] = updatedRegions;
+    game.markModified('regions');
+
+    return new Promise((resolve, reject) => {
+      game.save()
+        .then(game => resolve(game))
+        .catch(err => reject(err))
+    })
+  } else {
+    return new Promise(resolve => resolve(game));
+  }
 }
 
 module.exports = {
@@ -330,4 +341,5 @@ module.exports = {
   removeUser,
   createCircularRegions,
   updateRegions,
+  regionChangeEvent,
 };
