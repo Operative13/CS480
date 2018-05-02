@@ -25,6 +25,10 @@ app.get('/notifications/user/5acf0998cb70ea32d727b371', (req, res) => {
   res.render('notifications-user');
 });
 
+app.get('/test-regions', (req, res) => {
+  res.render('test-regions');
+});
+
 module.exports = {
   app
 };

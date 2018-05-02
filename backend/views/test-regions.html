@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ws</title>
+    <script type="application/javascript">
+        var exampleSocket = new WebSocket("ws://localhost:3000/api/games/5ae91d70e457442d27964b29/region-changed");
+        exampleSocket.onopen = function() {
+          exampleSocket.send('hello from client');
+        };
+        exampleSocket.onmessage = (msg) => {
+          console.log(msg);
+          console.log(JSON.parse(msg));
+        }
+    </script>
+</head>
+<body>
+loaded
+</body>
+</html>

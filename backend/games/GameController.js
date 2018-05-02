@@ -248,6 +248,9 @@ router.post('/:id', function(req, res) {
 });
 
 router.ws('/:id/region-changed', function(req, ws) {
+  ws.on('message', function(msg) {
+    console.log(msg);
+  });
   regionChangeEvent.on('event', function(regions) {
     ws.send(JSON.stringify(regions));
   });
