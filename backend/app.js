@@ -30,5 +30,5 @@ app.get('/test-regions', (req, res) => {
 });
 
 module.exports = {
-  app
+  app,
 };

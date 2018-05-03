@@ -247,11 +247,12 @@ router.post('/:id', function(req, res) {
   });
 });
 
-router.ws('/:id/region-changed', function(req, ws) {
+router.ws('/:id/regions', function(ws, req) {
   ws.on('message', function(msg) {
     console.log(msg);
   });
-  regionChangeEvent.on('event', function(regions) {
+
+  regionChangeEvent.on(String(req.params.id), function(regions) {
     ws.send(JSON.stringify(regions));
   });
 });

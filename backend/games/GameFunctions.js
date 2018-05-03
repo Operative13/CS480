@@ -15,7 +15,7 @@ const {
 const ObjectId = require('mongoose').Types.ObjectId;
 const EventEmitter = require('events');
 const regionChangeEvent = new EventEmitter();
-
+const { logger } = require('../app');
 
 /**
  * Attempts to put the users in a games room
@@ -192,12 +192,12 @@ function isUserInAGame(userId) {
 /**
  * accurate by +/- 1 meter. delta lat equal to 50m
  */
-let fiftyMetersInDeltaLatitude = 0.00045;
+const fiftyMetersInDeltaLatitude = 0.00045;
 
 /**
  * accurate by +/- 1 meter. delta lon equal to 50m
  */
-let fiftyMetersInDeltaLongitude = 0.00055;
+const fiftyMetersInDeltaLongitude = 0.00055;
 
 /**
  * Measure the distance in meters between two points
@@ -209,7 +209,7 @@ let fiftyMetersInDeltaLongitude = 0.00055;
  * @param lon2
  * @returns {number} distance in meters
  */
-function measure(lat1, lon1, lat2, lon2) {  // generally used geo measurement function
+function measure(lat1, lon1, lat2, lon2) {
   let R = 6378.137; // Radius of earth in KM
   let dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
   let dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
@@ -320,7 +320,10 @@ function updateRegions(game) {
   } // end regions loop
 
   if (aRegionWasChanged) {
-    regionChangeEvent.emit('event', updatedRegions);
+    console.log(`GameFunctions#updateRegions: game _id = ${game._id} regions 
+      changed to ${JSON.stringify(updatedRegions, null, 2)}`);
+
+    regionChangeEvent.emit(String(game._id), updatedRegions);
 
     game['regions'] = updatedRegions;
     game.markModified('regions');
