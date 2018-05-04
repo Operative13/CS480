@@ -320,8 +320,8 @@ function updateRegions(game) {
   } // end regions loop
 
   if (aRegionWasChanged) {
-    console.log(`GameFunctions#updateRegions: game _id = ${game._id} regions 
-      changed to ${JSON.stringify(updatedRegions, null, 2)}`);
+    // console.log(`GameFunctions#updateRegions: game _id = ${game._id} regions
+    //   changed to ${JSON.stringify(updatedRegions, null, 2)}`);
 
     regionChangeEvent.emit(String(game._id), updatedRegions);
 

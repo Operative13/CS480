@@ -163,6 +163,16 @@ describe('Game#create: create a new game', () => {
   });
 });
 
+describe('Game#listenForRegionChange: adds a callback to call when region info changed', () => {
+  it('should call the callback before all the test cases finish', () => {
+    let callback = () => {
+      console.log('callback called');
+    };
+
+    game.listenForRegionChange(callback);
+  });
+});
+
 describe('Game#setGeolocation: set james\'s geolocation to 10, 50 (lon, lat)', () => {
   it('should change the info stored in the game doc', function(done) {
     game.setGeolocation(userJames.id, 10, 50)

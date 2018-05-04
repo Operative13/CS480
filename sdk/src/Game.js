@@ -1,4 +1,6 @@
 import fetch from 'node-fetch';
+
+
 import {
   getDataFromSuccess,
   getErrorFromFailOrError
@@ -12,6 +14,8 @@ module.exports = class Game {
     this.geolocations = {};
     this.regions = [];
 
+    this._domain = baseConnection.domain;
+    this._port = baseConnection.port;
     this._url = `${baseConnection.baseUrl}/api/games`;
   }
 
@@ -224,6 +228,22 @@ module.exports = class Game {
         })
         .catch(err => reject(err))
     })
+  }
+
+  listenForRegionChange(callback) {
+    if (!this.id) {
+      throw new Error('game id has not been defined within the game object');
+    }
+
+    let socket = new WebSocket(`ws://${this._domain}:${this._port}/api/games/${this.id}/regions`);
+    let uri = `ws://${this._domain}:${this._port}/api/games/${this.id}/regions`;
+    // let socket = new XMLHttpRequest();
+    // socket
+
+    socket.onmessage = (msg) => {
+      console.log(msg);
+      callback();
+    }
   }
 
   /**
