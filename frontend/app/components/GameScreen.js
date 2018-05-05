@@ -3,12 +3,18 @@ import { StyleSheet, Text, View, TouchableOpacity, AsyncStorage,} from 'react-na
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 import MapView from 'react-native-maps';
 import {Marker, Circle} from 'react-native-maps';
+import CountDown from 'react-native-countdown-component';
 
 import BaseConnection from 'kingdoms-game-sdk/src/BaseConnection';
 import Game from 'kingdoms-game-sdk/src/Game';
 
-import castleImg from '../assets/castle.png'
-import fortImg from '../assets/fort.png'
+import castleImg from '../assets/castle256.png'
+import fortImg from '../assets/fort256.png'
+import redCastleImg from '../assets/redcastle256.png'
+import redFortImg from '../assets/redfort256.png'
+import blueCastleImg from '../assets/bluecastle256.png'
+import blueFortImg from '../assets/bluefort256.png'
+
 import IP from '../../config';
 
 export default class GameScreen extends React.Component {
@@ -236,11 +242,29 @@ export default class GameScreen extends React.Component {
             }
 
             let image;
-            if(regions[item].type == "fort"){
-                image = fortImg;
+            if(color === '#0000ff'){
+                if(regions[item].type == "fort"){
+                    image = blueFortImg;
+                }
+                else if (regions[item].type == "castle"){
+                    image = blueCastleImg;
+                }
             }
-            else if (regions[item].type == "castle"){
-                image = castleImg;
+            else if (color === '#ff0000'){
+                if (regions[item].type == "fort") {
+                    image = redFortImg;
+                }
+                else if (regions[item].type == "castle") {
+                    image = redCastleImg;
+                }
+            }
+            else {
+                if (regions[item].type == "fort") {
+                    image = fortImg;
+                }
+                else if (regions[item].type == "castle") {
+                    image = castleImg;
+                }
             }
 
             let node = {
@@ -248,7 +272,7 @@ export default class GameScreen extends React.Component {
                 color: color,
                 title: regions[item].type,
                 radius: regions[item].radius,
-                image: fortImg,
+                image: image,
             };
             nodes.push(node);
         }
@@ -290,22 +314,22 @@ export default class GameScreen extends React.Component {
                         ))}
 
                     </MapView>
+                    <View >
+                        <TouchableOpacity
+                            style={styles.btn}
+                            onPress={this.quitGame}
+                        >
+                            <Text>Quit</Text>
+                        </TouchableOpacity>
+                        <CountDown
+                            until={600}
+                            size={15}
+                            timeToShow={['M', 'S']}
+                        />
+                    </View>
+
                 </View>
-                <View style={styles.menuContainer}>
-                    <TouchableOpacity
-                        style={styles.btn}
-                        onPress={this.quitGame}
-                    >
-                        <Text>Quit</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                        style={styles.btn}
-                        onPress={this.endGame}
-                    >
-                        <Text>GameOver</Text>
-                    </TouchableOpacity>
-                </View>
+
             </View>    
         );
     }
@@ -351,13 +375,14 @@ const styles = StyleSheet.create({
     },
     btn: {
         alignSelf: 'stretch',
-        backgroundColor: '#01c853',
+        backgroundColor: '#FAB913',
         padding: 5,
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 10,
+        marginTop: 10,
     },
     container: {
-        flex: 0.8,
+        flex: 1,
         padding: 16,
         paddingTop: 30,
         backgroundColor: '#fff'
