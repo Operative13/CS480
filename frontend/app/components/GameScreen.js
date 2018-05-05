@@ -7,6 +7,8 @@ import {Marker, Circle} from 'react-native-maps';
 import BaseConnection from 'kingdoms-game-sdk/src/BaseConnection';
 import Game from 'kingdoms-game-sdk/src/Game';
 
+import castleImg from '../assets/castle.png'
+import fortImg from '../assets/fort.png'
 import IP from '../../config';
 
 export default class GameScreen extends React.Component {
@@ -80,10 +82,18 @@ export default class GameScreen extends React.Component {
         this.updateGeolocation();
         let timer = setInterval(this.updateGeolocation, this.geolocationUpdatePeriod);
         this.setState({timer});
+        this.game.getGame(this.state.gameID)
+            .then((response) => {
+                this.updateNodes(this.game.regions);
+            })
+        this.game.listenForRegionChange(this.updateNodes)
+
+        console.log("gameID: " + this.state.gameID);
+        console.log("userID: " + this.state.userID);
     }
 
     _loadInitialState = async () => {
-        console.log('loadinitialstate');
+        //console.log('loadinitialstate');
         //get id
         let value = await AsyncStorage.getItem('_id');
         //return to menu on error
@@ -92,6 +102,7 @@ export default class GameScreen extends React.Component {
             this.props.navigation.pop(1);
         }
         this.state.userID = value;
+        console.log("userID: " + this.state.userID);
 
         //get gameInstance
         if(this.state.gameID === '' || this.state.gameID === null || this.state.gameID === undefined){
@@ -109,43 +120,50 @@ export default class GameScreen extends React.Component {
    * @returns {Promise<void>}
    */
   updateGeolocation = () => {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                if(!this.state.regionSet){
-                    let region = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.0011
-                    };
-                    this.setState({region,regionSet:true})
-                }
+        try {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    if (!this.state.regionSet) {
+                        let region = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.0011
+                        };
+                        this.setState({region, regionSet: true})
+                    }
 
-                //update geolocation on server
-                this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
-                    .then((response) => {
-                        console.log(response);
-                        this.setState({numErrors: 0});
-                        this.updateNodes(response);
-                        this.updatePlayers(position,response);
-                    })
-                    .catch((err) =>{
-                        console.error(err);
-                        //TODO
-                        //figure out what the specific way to check for "TypeError: Network request failed" is
-                        let numErrors = this.state.numErrors + 1;
-                        this.setState({numErrors: numErrors});
-                        if(numErrors > 5){
-                            alert(err);
-                        }
-                    });
-            },
-            (err) => {console.log(err)},
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-            }
-        );
+                    //update geolocation on server
+                    this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
+                        .then((response) => {
+                            //console.log(response);
+                            this.setState({numErrors: 0});
+                            //this.updateNodes(response.regions);
+                            this.updatePlayers(position, response);
+                        })
+                        .catch((err) => {
+                            console.error(err);
+                            //TODO
+                            //figure out what the specific way to check for "TypeError: Network request failed" is
+                            let numErrors = this.state.numErrors + 1;
+                            this.setState({numErrors: numErrors});
+                            if (numErrors > 5) {
+                                alert(err);
+                            }
+                        });
+                },
+                (err) => {
+                    console.log(err)
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                }
+            );
+        }
+        catch (error){
+            console.log(error);
+        }
     };
 
     /**
@@ -155,71 +173,86 @@ export default class GameScreen extends React.Component {
      * @param response - game document return from server, contains enemy coordinates
      */
     updatePlayers = (position, response) => {
-        let coordEnemy = {
-            latitude: 0,
-            longitude: 0,
-        };
+        try {
+            let coordEnemy = {
+                latitude: 0,
+                longitude: 0,
+            };
 
-        for (let userId in this.game.geolocations){
-            if(response.geolocations.hasOwnProperty(userId) && userId !== this.state.userID){
-                coordEnemy.latitude = response.geolocations[userId].lat;
-                coordEnemy.longitude = response.geolocations[userId].lon;
+            for (let userId in this.game.geolocations) {
+                if (response.geolocations.hasOwnProperty(userId) && userId !== this.state.userID) {
+                    coordEnemy.latitude = response.geolocations[userId].lat;
+                    coordEnemy.longitude = response.geolocations[userId].lon;
+                }
             }
-        }
 
-        let playerMarkers = [
-            {
-                coordinate: {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
+            let playerMarkers = [
+                {
+                    coordinate: {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    },
+                    title: "User",
+                    pinColor: '#0000ff',
                 },
-                title: "User",
-                pinColor: '#0000ff',
-            },
-            {
-                coordinate: coordEnemy,
-                title: "Enemy",
-                pinColor: '#ff0000',
-            },
-        ]
-        this.setState({
-            playerMarkers: playerMarkers
-        });
+                {
+                    coordinate: coordEnemy,
+                    title: "Enemy",
+                    pinColor: '#ff0000',
+                },
+            ]
+            this.setState({
+                playerMarkers: playerMarkers
+            });
+        }
+        catch (error){
+            console.log(error)
+        }
     };
 
     /**
      * ->update nodes with response from server
      * @param response - game document return from server, contains regions which have LatLang, radius, owner, and type
      */
-    updateNodes = (response) => {
+    updateNodes = (regions) => {
         let nodes=[];
-        console.log("updateNodes: " + JSON.stringify(response));
-        for(let item in response.regions){
-            console.log("node: " + JSON.stringify(item));
+        //console.log("updateNodes: " + JSON.stringify(regions));
+        console.log(this.game.regions)
+        for(let item in regions){
+            //console.log("node: " + JSON.stringify(item));
             let coord = {
-                latitude: response.regions[item].lat,
-                longitude: response.regions[item].lon,
+                latitude: regions[item].lat,
+                longitude: regions[item].lon,
             };
             let color;
-            if(response.regions[item].owner == null){
+            if(regions[item].owner == null){
                 color = '#FAF0E6';
             }
-            else if (response.regions[item].owner === this.state.userID){
+            else if (regions[item].owner === this.state.userID){
                 color = '#0000ff';
             }
             else {
                 color = '#ff0000';
             }
 
+            let image;
+            if(regions[item].type == "fort"){
+                image = fortImg;
+            }
+            else if (regions[item].type == "castle"){
+                image = castleImg;
+            }
+
             let node = {
                 coordinate: coord,
                 color: color,
-                title: response.regions[item].type,
-                radius: response.regions[item].radius,
+                title: regions[item].type,
+                radius: regions[item].radius,
+                image: fortImg,
             };
             nodes.push(node);
         }
-        console.log("nodes: " + JSON.stringify(nodes));
+        //console.log("nodes: " + JSON.stringify(nodes));
         this.setState({nodes: nodes});
     };
 
@@ -245,7 +278,7 @@ export default class GameScreen extends React.Component {
                             <Marker
                                coordinate={marker.coordinate}
                                title={marker.title}
-                               pinColor={marker.color}
+                               image={marker.image}
                             />
                         ))}
                         {this.state.nodes.map( marker =>(
@@ -287,6 +320,7 @@ export default class GameScreen extends React.Component {
     }
 
     quitGame = () => {
+        clearInterval(this.state.timer);
         this.game.leave(this.state.userID, this.state.gameID);
         AsyncStorage.removeItem('gameID');
         this.props.navigation.pop(2);
