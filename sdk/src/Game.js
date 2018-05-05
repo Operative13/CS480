@@ -1,10 +1,10 @@
-import fetch from 'node-fetch';
-import WebSocket from 'ws';
+const fetch = require('node-fetch');
+const WebSocket = require('ws');
 
-import {
+const {
   getDataFromSuccess,
   getErrorFromFailOrError
-} from './utility';
+} = require('./utility');
 
 module.exports = class Game {
   constructor(baseConnection) {

@@ -1,8 +1,8 @@
-import fetch from 'node-fetch';
-import {
+const fetch = require('node-fetch');
+const {
   getDataFromSuccess,
   getErrorFromFailOrError
-} from './utility';
+} = require('./utility');
 
 /**
  * Represents a single users and allows for access to backend REST API
