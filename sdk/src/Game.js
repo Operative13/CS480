@@ -1,5 +1,4 @@
 const fetch = require('node-fetch');
-const WebSocket = require('ws');
 
 const {
   getDataFromSuccess,
@@ -7,7 +6,14 @@ const {
 } = require('./utility');
 
 module.exports = class Game {
-  constructor(baseConnection) {
+
+  /**
+   * @param baseConnection {BaseConnection} - object contains properties for
+   *  domain, port, and baseUrl that help determine URIs to connect & query
+   * @param WebSocketClass {class|function} defaults to importing ws lib
+   *  If a react native app uses this class, pass WebSocket, a built-in class
+   */
+  constructor(baseConnection, WebSocketClass=null) {
     this.id = null;
     this.name = null;
     this.users = [];
@@ -17,6 +23,11 @@ module.exports = class Game {
     this._domain = baseConnection.domain;
     this._port = baseConnection.port;
     this._url = `${baseConnection.baseUrl}/api/games`;
+    
+    if (WebSocketClass)
+      this.WebSocket = WebSocketClass;
+    else
+      this.WebSocket = require('ws');
   }
 
   _updateGame(gameDocumentJson) {
@@ -243,7 +254,7 @@ module.exports = class Game {
     }
 
     let uri = `ws://${this._domain}:${this._port}/api/games/${this.id}/regions`;
-    let socket = new WebSocket(uri);
+    let socket = new this.WebSocket(uri);
 
     socket.onmessage = (msg) => {
       let data = msg.data;
