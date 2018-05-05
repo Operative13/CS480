@@ -1,15 +1,15 @@
 {
   "name": "kingdoms-game-sdk",
-  "version": "0.0.13",
+  "version": "0.1.2",
   "main": "main.nodejs.js",
-  "description": "A REST API wrapper for the kingdoms-game backend",
+  "description": "A REST API wrapper for kingdoms-game-backend",
   "repository": {
     "type": "git",
     "url": "https://github.com/Operative13/CS480/tree/master/sdk"
   },
   "scripts": {
     "start": "echo not implemented",
-    "test": "npm run build; mocha",
+    "test": "mocha",
     "build": "babel src -d lib",
     "docs": "jsdoc src -c jsdoc.config.json -d docs"
   },
@@ -23,6 +23,7 @@
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
+    "babel-preset-es2017": "^6.24.1",
     "chai": "^4.1.2",
     "mocha": "^5.1.0",
     "mongoose": "^5.0.14",

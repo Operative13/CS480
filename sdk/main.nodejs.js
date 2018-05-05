@@ -1,5 +1,5 @@
 module.exports = {
-  BaseConnection: require('./lib/BaseConnection'),
-  User: require('./lib/User'),
-  Game: require('./lib/Game'),
+  BaseConnection: require('./src/BaseConnection'),
+  User: require('./src/User'),
+  Game: require('./src/Game'),
 };

@@ -12,8 +12,8 @@ const Promise = require('promise');
 
 // sdk imports
 const BaseConnection = require('./lib/BaseConnection');
-const User = require('./lib/User');
-const Game = require('./lib/Game');
+const User = require('./src/User');
+const Game = require('./src/Game');
 
 const baseConnection = new BaseConnection('localhost', '3000');
 const userJames = new User(baseConnection);
@@ -78,13 +78,11 @@ describe('User#create: create 2 new users', () => {
       .then((response) => {
         assert(username === response.username);
         assert(username === userJames.username);
-        // console.log(user.toString());
       })
       .catch(err => err);
 
     let p2 = userJohn.create('john', 'pw', email)
       .then(response => {
-        // console.log(user2);
         assert(response.email === email);
         assert(userJohn.email === email);
       })
@@ -127,7 +125,6 @@ describe('User#create: try to create a user with a taken username', () => {
     // next test function calls
     user3.create(username, password)
       .then((response) => {
-        console.log(response);
         assert(username === response.username);
         assert(username === userJames.username);
         done();
