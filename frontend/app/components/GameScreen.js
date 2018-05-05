@@ -54,6 +54,7 @@ export default class GameScreen extends React.Component {
             timer: null,
             numErrors: 0,
             nodes: [],
+            initialStateSet: false,
         };
         //initial game id
         const {params} = this.props.navigation.state;
@@ -115,6 +116,7 @@ export default class GameScreen extends React.Component {
             alert('error getting game ID');
             this.props.navigation.pop(1);
         }
+        this.state.initialStateSet = true;
     };
 
   /**
@@ -282,56 +284,65 @@ export default class GameScreen extends React.Component {
 
 
     render(){
-        return(
-            <View style={styles.wrapper}>
-                <View style={styles.container}>
-                    <MapView style={styles.map}
-                        region={this.state.region}
-                        onRegionChangeComplete={(region) => this.onRegionChange(region)}
-                        key={"gs-map-view"}
-                    >
-                        {this.state.playerMarkers.map(marker => (
-                            <Marker
-                                key={marker.title}
-                                coordinate={marker.coordinate}
-                                title={marker.title}
-                                pinColor ={marker.pinColor}
-                            />
-                        ))}
-                        {this.state.nodes.map( marker =>(
-                            <Marker
-                               coordinate={marker.coordinate}
-                               title={marker.title}
-                               image={marker.image}
-                            />
-                        ))}
-                        {this.state.nodes.map( marker =>(
-                            <Circle
-                                center={marker.coordinate}
-                                radius={marker.radius}
-                                fillColor={marker.color}
-                            />
-                        ))}
-
-                    </MapView>
-                    <View >
-                        <TouchableOpacity
-                            style={styles.btn}
-                            onPress={this.quitGame}
+        if(this.state.regionSet && this.state.initialStateSet) {
+            return (
+                <View style={styles.wrapper}>
+                    <View style={styles.container}>
+                        <MapView style={styles.map}
+                                 initialRegion={this.state.region}
+                                 onRegionChangeComplete={(region) => this.onRegionChange(region)}
+                                 key={"gs-map-view"}
                         >
-                            <Text>Quit</Text>
-                        </TouchableOpacity>
-                        <CountDown
-                            until={600}
-                            size={15}
-                            timeToShow={['M', 'S']}
-                        />
+                            {this.state.playerMarkers.map(marker => (
+                                <Marker
+                                    key={marker.title}
+                                    coordinate={marker.coordinate}
+                                    title={marker.title}
+                                    pinColor={marker.pinColor}
+                                />
+                            ))}
+                            {this.state.nodes.map(marker => (
+                                <Marker
+                                    coordinate={marker.coordinate}
+                                    title={marker.title}
+                                    image={marker.image}
+                                />
+                            ))}
+                            {this.state.nodes.map(marker => (
+                                <Circle
+                                    center={marker.coordinate}
+                                    radius={marker.radius}
+                                    fillColor={marker.color}
+                                />
+                            ))}
+
+                        </MapView>
+                        <View>
+                            <TouchableOpacity
+                                style={styles.btn}
+                                onPress={this.quitGame}
+                            >
+                                <Text>Quit</Text>
+                            </TouchableOpacity>
+                            <CountDown
+                                until={600}
+                                size={15}
+                                timeToShow={['M', 'S']}
+                            />
+                        </View>
+
                     </View>
 
                 </View>
-
-            </View>    
-        );
+            );
+        }
+        else {
+            return(
+                <View style={{flex: 1, justifyContent: 'center', alignItems: "center",}}>
+                    <Text>Loading</Text>
+                </View>
+            );
+        }
     }
 
     /**
@@ -379,7 +390,7 @@ const styles = StyleSheet.create({
         padding: 5,
         alignItems: 'center',
         marginBottom: 10,
-        marginTop: 10,
+        marginTop: 20,
     },
     container: {
         flex: 1,
