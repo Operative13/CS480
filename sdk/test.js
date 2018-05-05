@@ -165,8 +165,14 @@ describe('Game#create: create a new game', () => {
 
 describe('Game#listenForRegionChange: adds a callback to call when region info changed', () => {
   it('should call the callback before all the test cases finish', () => {
-    let callback = () => {
-      console.log('callback called');
+    let callback = (json) => {
+      json.forEach((regionInfo) => {
+        assert(regionInfo.hasOwnProperty('lat'));
+        assert(regionInfo.hasOwnProperty('lon'));
+        assert(regionInfo.hasOwnProperty('owner'));
+        assert(regionInfo.hasOwnProperty('type'));
+        assert(regionInfo.hasOwnProperty('radius'));
+      });
     };
 
     game.listenForRegionChange(callback);
@@ -189,7 +195,6 @@ describe('Game#join: have john join the game james is in', () => {
   it('should put john in the game', async () => {
     await game.join(userJohn.id, null, userJames.username)
       .then(json => {
-        // console.log(json);
         assert(json.users.length === 2, 'users contains two users');
         assert(Object.keys(json.geolocations).length === 2);
       })
@@ -204,8 +209,6 @@ describe('john joins the game directly on top of a capture region', () => {
 
     return game.setGeolocation(userJohn.id, lon, lat)
       .then(json => {
-        // console.log(json);
-        console.log(game.toString());
         assert(json.regions[0].owner === userJohn.id);
       })
       .catch(err => {

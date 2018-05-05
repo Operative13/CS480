@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-
+import WebSocket from 'ws';
 
 import {
   getDataFromSuccess,
@@ -230,21 +230,26 @@ module.exports = class Game {
     })
   }
 
+  /**
+   * Creates a websocket to call the given callback when a message is sent
+   * from the server. The json from the response will be passed to the callback
+   * (without jsend std).
+   * @param callback {function} - func should take 1 argument, json from
+   *  message from server
+   */
   listenForRegionChange(callback) {
     if (!this.id) {
       throw new Error('game id has not been defined within the game object');
     }
 
-    let socket = new WebSocket(`ws://${this._domain}:${this._port}/api/games/${this.id}/regions`);
     let uri = `ws://${this._domain}:${this._port}/api/games/${this.id}/regions`;
-    // let socket = new XMLHttpRequest();
-    // socket
+    let socket = new WebSocket(uri);
 
     socket.onmessage = (msg) => {
-      console.log(msg);
-      callback();
+      let data = msg.data;
+      callback(JSON.parse(data));
     }
-  }
+  };
 
   /**
    * Takes puts the attributes associated with the game doc for
