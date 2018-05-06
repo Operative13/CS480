@@ -31,7 +31,7 @@ export default class GameSearch extends React.Component {
         }
 
         let baseConn = new BaseConnection( IP ,'3000');
-        this.game = new Game(baseConn);
+        this.game = new Game(baseConn, WebSocket);
     }
 
     componentDidMount(){

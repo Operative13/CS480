@@ -182,6 +182,10 @@ export default class GameScreen extends React.Component {
      */
     updatePlayers = (position, response) => {
         try {
+            if (!this.game.hasOwnProperty('geolocations') || !response) {
+                throw new Error(`invalid http response or Game object. game = \n${this.game.toString()}`);
+            }
+
             let coordEnemy = {
                 latitude: 0,
                 longitude: 0,
@@ -214,7 +218,7 @@ export default class GameScreen extends React.Component {
             });
         }
         catch (error){
-            console.log(error)
+            console.error(error)
         }
     };
 
