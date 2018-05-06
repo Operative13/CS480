@@ -338,6 +338,10 @@ function updateRegions(game) {
   }
 }
 
+function startAwardingPointsForCaptureZones() {
+
+}
+
 module.exports = {
   joinGame,
   joinGameByName,
