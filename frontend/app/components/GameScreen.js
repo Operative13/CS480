@@ -69,7 +69,7 @@ export default class GameScreen extends React.Component {
         };
 
         let baseConn = new BaseConnection( IP ,'3000');
-        this.game = new Game(baseConn);
+        this.game = new Game(baseConn, WebSocket);
         this.game.id = this.state.gameID;
 
       /**

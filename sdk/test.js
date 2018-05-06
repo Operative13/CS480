@@ -19,7 +19,7 @@ const baseConnection = new BaseConnection('localhost', '3000');
 const userJames = new User(baseConnection);
 const userJohn = new User(baseConnection);
 const user3 = new User(baseConnection);
-const game = new Game(baseConnection);
+const game = new Game(baseConnection, require('ws'));
 
 /**
  * Connect to the proper mongoDB URI

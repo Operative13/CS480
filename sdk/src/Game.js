@@ -13,7 +13,7 @@ module.exports = class Game {
    * @param WebSocketClass {class|function} defaults to importing ws lib
    *  If a react native app uses this class, pass WebSocket, a built-in class
    */
-  constructor(baseConnection, WebSocketClass=null) {
+  constructor(baseConnection, WebSocketClass) {
     this.id = null;
     this.name = null;
     this.users = [];
@@ -24,10 +24,12 @@ module.exports = class Game {
     this._port = baseConnection.port;
     this._url = `${baseConnection.baseUrl}/api/games`;
     
-    if (WebSocketClass)
+    if (!WebSocketClass) {
+      console.warn('[kingdoms-game-sdk] WARN: WebSocket is not defined, ' +
+        'Game#listenForRegionChange will not function');
+    } else {
       this.WebSocket = WebSocketClass;
-    else
-      this.WebSocket = require('ws');
+    }
   }
 
   _updateGame(gameDocumentJson) {
@@ -247,8 +249,18 @@ module.exports = class Game {
    * (without jsend std).
    * @param callback {function} - func should take 1 argument, json from
    *  message from server
+   * @param onError {function} - func should take 1 argument, error response
+   *  from server. Defaults to printing data from error message event in
+   *  stderr.
+   * @param onClose {function} - func should take 1 argument, event itself.
+   * Defaults to printing reason and
+   *  stderr.
    */
-  listenForRegionChange(callback) {
+  listenForRegionChange(
+    callback,
+    onError=(data) => console.error(data),
+    onClose=(event) => console.log(`code: ${event.code}; reason: ${event.reason}`)) {
+
     if (!this.id) {
       throw new Error('game id has not been defined within the game object');
     }
@@ -256,9 +268,17 @@ module.exports = class Game {
     let uri = `ws://${this._domain}:${this._port}/api/games/${this.id}/regions`;
     let socket = new this.WebSocket(uri);
 
-    socket.onmessage = (msg) => {
-      let data = msg.data;
+    socket.onmessage = (event) => {
+      let data = event.data;
       callback(JSON.parse(data));
+    };
+
+    socket.onerror = (event) => {
+      onError(event.data);
+    };
+
+    socket.onclose = (event) => {
+      onClose(event);
     }
   };
 
