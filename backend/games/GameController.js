@@ -66,6 +66,8 @@ router.post('/create', function(req, res) {
         regions: GameFunctions.createCircularRegions(
           lat, lon, minRadius=5, maxRadius=20, owner=null, regionType="fort"
         ),
+        scores: {},
+        startTime: new Date(),
       };
 
       Game.create(
@@ -78,7 +80,7 @@ router.post('/create', function(req, res) {
         }
 
         // room already exists, but try to join this existing room
-        // or the games was just created
+        // or the game was just created
         else if (game || (err && req.body.joinIfExists)) {
           let userInfo = {
             // use myUserId, or if not truthy, use other one
@@ -92,7 +94,9 @@ router.post('/create', function(req, res) {
           joinGameByName(req.body.name, userInfo, res)
             .then(() => {return res})
             .catch(err => err);
-        } else {
+        }
+
+        else {
           return serverError(res, new Error('creating game room screwed up'));
         }
       });

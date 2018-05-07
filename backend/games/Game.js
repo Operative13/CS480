@@ -44,7 +44,7 @@ const GameSchema = new Schema({
    * that player. Example:
    * { '123': 10, '289': 15 }
    */
-  score: {
+  scores: {
     type: Schema.Types.Mixed,
     default: {},
   },

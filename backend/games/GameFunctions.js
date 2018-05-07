@@ -99,14 +99,20 @@ function addUser(game, userInfo) {
         game.geolocations[userInfo.userId] = {
           lat: userInfo.lat,
           lon: userInfo.lon
-      };
+        };
 
-      // required when modifying and saving value(s) of a property of type Mixed
-      // or of type Object in schema
-      game.markModified('geolocations');
-      game.save()
-        .then((savedGame) => resolve(savedGame))
-        .catch(err => reject(err))
+        if (!game.scores) {
+          game.scores = {};
+        }
+        game.scores[userInfo.userId] = 0;
+
+        // required when modifying and saving value(s) of a property of type Mixed
+        // or of type Object in schema
+        game.markModified('geolocations');
+        game.markModified('scores');
+        game.save()
+          .then((savedGame) => resolve(savedGame))
+          .catch(err => reject(err))
       })
     }
 
@@ -338,8 +344,43 @@ function updateRegions(game) {
   }
 }
 
-function startAwardingPointsForCaptureZones() {
+function startAwardingPointsForCaptureZones(gameId) {
+  /**
+   * Wait some time.
+   * @param time {Number} - amount of time to wait
+   * @returns {Promise<void>}
+   */
+  let wait = async (time) => {
+    setTimeout(
+      () => {},
+      time
+    );
+  };
 
+  return new Promise(async (resolve, reject) => {
+    while (true) {
+      // find the game doc by it's _id
+      Game.findOne({_id: gameId}, async (err, game) => {
+        if (err || !game) {
+          return reject(`id = ${gameId} doesn't exists. It might've been deleted if all users left.`);
+        }
+
+        // iterate over every region for this game
+        for (let region of game['regions']) {
+          let owner = String(region['owner']);
+          if (owner) {
+            game['scores'][owner] += GameConfig.pointsPerCaptureZone;
+          }
+        }
+
+        game.markModified('scores');
+        await game.save().catch(err => console.error(err));
+      });
+
+      // wait some time
+      await wait(GameConfig.captureZonePointsAwardedPeriod);
+    }
+  });
 }
 
 module.exports = {

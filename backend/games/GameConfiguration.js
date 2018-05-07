@@ -13,6 +13,11 @@ const config = {
    * where x is this value.
    */
   captureZonePointsAwardedPeriod: 5,
+
+  /**
+   * The amount of points awarded for each capture zone owned
+   */
+  pointsPerCaptureZone: 1,
 };
 
 module.exports = config;
