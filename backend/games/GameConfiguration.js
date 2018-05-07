@@ -18,6 +18,12 @@ const config = {
    * The amount of points awarded for each capture zone owned
    */
   pointsPerCaptureZone: 1,
+
+  /**
+   * After this much time (in seconds) elapses after the game is started,
+   * the game ends and a winner is determined.
+   */
+  gameDuration: 600,
 };
 
 module.exports = config;

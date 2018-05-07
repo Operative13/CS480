@@ -206,7 +206,7 @@ describe('john moves directly on top of a capture region', () => {
 
     return game.setGeolocation(userJohn.id, lon, lat)
       .then(json => {
-        assert(json.regions[0].owner === userJohn.id);
+        assert(json.regions[0].owner === userJohn.id, 'john is owner');
       })
       .catch(err => {
         throw new Error(err.message || err.data);

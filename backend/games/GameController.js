@@ -7,16 +7,13 @@ const ObjectId = require('mongoose').Types.ObjectId;
 
 // local imports
 const Game = new require('./Game');
-const GameConfig = require('./GameConfiguration.js');
 const UserFunctions = require('../users/UserFunctions');
+const GameLogic = require('./GameLogic');
 const {
   joinGame,
   joinGameByName,
-  regionChangeEvent,
-} = require('./GameFunctions');
-const GameFunctions = require('./GameFunctions');
-const fiftyMetersInDeltaLatitude = GameFunctions.fiftyMetersInDeltaLatitude;
-const fiftyMetersInDeltaLongitude = GameFunctions.fiftyMetersInDeltaLongitude;
+} = require('./GameManagement');
+const GameFunctions = require('./GameManagement');
 const {
   requestError,
   serverError,
@@ -63,11 +60,10 @@ router.post('/create', function(req, res) {
 
       let gameInfo = {
         name: req.body.name,
-        regions: GameFunctions.createCircularRegions(
+        regions: GameLogic.createCircularRegions(
           lat, lon, minRadius=5, maxRadius=20, owner=null, regionType="fort"
         ),
         scores: {},
-        startTime: new Date(),
       };
 
       Game.create(
@@ -93,7 +89,7 @@ router.post('/create', function(req, res) {
           // to this games room
           joinGameByName(req.body.name, userInfo, res)
             .then(() => {
-              GameFunctions.startAwardingPointsForCaptureZones(game._id)
+              GameLogic.startGame(game._id)
                 .then(message => console.log(message))
                 .catch(err => console.error(err));
 
@@ -246,7 +242,7 @@ router.post('/:id', function(req, res) {
       game.save()
         .then(savedGame => {
           // update capture zones ownerships
-          GameFunctions.updateRegions(savedGame)
+          GameLogic.updateRegions(savedGame)
             .then(savedGame2 => success(res, savedGame2))
             .catch(err => serverError(res, err))
         })
@@ -258,7 +254,7 @@ router.post('/:id', function(req, res) {
 });
 
 router.ws('/:id/regions', function(ws, req) {
-  regionChangeEvent.on(String(req.params.id), function(regions) {
+  GameLogic.regionChangeEvent.on(String(req.params.id), function(regions) {
     ws.send(JSON.stringify(regions));
   });
 });
