@@ -92,7 +92,13 @@ router.post('/create', function(req, res) {
           // player created and is added to this games room or he is just added
           // to this games room
           joinGameByName(req.body.name, userInfo, res)
-            .then(() => {return res})
+            .then(() => {
+              GameFunctions.startAwardingPointsForCaptureZones(game._id)
+                .then(message => console.log(message))
+                .catch(err => console.error(err));
+
+              return res;
+            })
             .catch(err => err);
         }
 

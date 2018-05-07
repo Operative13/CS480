@@ -347,22 +347,28 @@ function updateRegions(game) {
 function startAwardingPointsForCaptureZones(gameId) {
   /**
    * Wait some time.
-   * @param time {Number} - amount of time to wait
+   * @param time {Number} - amount of time to wait in seconds
    * @returns {Promise<void>}
    */
-  let wait = async (time) => {
-    setTimeout(
-      () => {},
-      time
-    );
-  };
+  function wait(time) {
+    return new Promise(resolve => {
+      setTimeout(
+        () => resolve(),
+        time * 1000,
+      );
+    })
+  }
 
   return new Promise(async (resolve, reject) => {
-    while (true) {
+    let done = false;
+
+    while (!done) {
+      console.log('loop');
       // find the game doc by it's _id
       Game.findOne({_id: gameId}, async (err, game) => {
         if (err || !game) {
-          return reject(`id = ${gameId} doesn't exists. It might've been deleted if all users left.`);
+          done = true;
+          return resolve(`id = ${gameId} doesn't exists. It might've been deleted if all users left.`);
         }
 
         // iterate over every region for this game
@@ -390,4 +396,5 @@ module.exports = {
   createCircularRegions,
   updateRegions,
   regionChangeEvent,
+  startAwardingPointsForCaptureZones,
 };
