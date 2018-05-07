@@ -15,6 +15,9 @@ export default class Login extends React.Component {
             username: '',
             password: '',
         }
+        //react native testing warnings
+        //console.disableYellowBox = true;
+        //console.reportErrorsAsExceptions = false;
     }
 
 

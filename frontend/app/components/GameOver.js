@@ -8,20 +8,17 @@ export default class GameOver extends React.Component {
         super(props);
         this.state = {
             endText: '',
-        }
-    }
-
-    render(){
-        
+        };
         const {params} = this.props.navigation.state;
         const isWinner = params ? params.isWinner : null;
         if(isWinner)
-            this.state.endText = 'WINNER';
+            this.setState({endText:'WINNER'});
         else
-            this.state.endText = 'LOSER';
-    
+            this.setState({endText:'LOSER'});
+    }
+
+    render(){
         return(
-            
             <View style={styles.container}>
                 <Text style={styles.header}> - Game Over - </Text>
                 <Text style={styles.header}> {this.state.endText} </Text>

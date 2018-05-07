@@ -92,7 +92,7 @@ export default class GameScreen extends React.Component {
         this.updateGeolocation();
         let timer = setInterval(this.updateGeolocation, this.geolocationUpdatePeriod);
         this.setState({timer});
-        this.game.listenForRegionChange(this.updateNodes)
+        this.game.listenForRegionChange(this.updateNodes);
 
         console.log("gameID: " + this.state.gameID);
         console.log("userID: " + this.state.userID);
@@ -127,7 +127,7 @@ export default class GameScreen extends React.Component {
         this.game.getGame(this.state.gameID)
             .then((response) => {
                 this.updateNodes(this.game.regions);
-                this.setState({timeLeft: this.calcTimeLeft(response.startTime)})
+                this.setState({timeLeft: this.calcTimeLeft(response.startTime)});
                 this.state.initialGetGame = true;
             })
 
@@ -250,12 +250,12 @@ export default class GameScreen extends React.Component {
 
     /**
      * ->update nodes with response from server
-     * @param response - game document return from server, contains regions which have LatLang, radius, owner, and type
+     * @param regions - regions from game document return from server, contains regions which have LatLang, radius, owner, and type
      */
     updateNodes = (regions) => {
         let nodes=[];
         //console.log("updateNodes: " + JSON.stringify(regions));
-        console.log(this.game.regions)
+        //console.log(this.game.regions)
         for(let item in regions){
             //console.log("node: " + JSON.stringify(item));
             let coord = {
@@ -407,6 +407,9 @@ export default class GameScreen extends React.Component {
         this.setState({ region });
     }
 
+    /**
+     * -> function called when user presses the Quit game button
+     */
     quitGame = () => {
         clearInterval(this.state.timer);
         this.game.leave(this.state.userID, this.state.gameID);
@@ -414,12 +417,15 @@ export default class GameScreen extends React.Component {
         this.props.navigation.pop(2);
     }
 
-
+    /**
+     * -> function called when a winner has been set in the game document
+     * @param isWinner - true or false value that will be passed to the GameOver screen
+     */
     endGame = (isWinner) => {
         //alert('ending game');
+        clearInterval(this.state.timer);
         this.game.leave(this.state.userID, this.state.gameID);
         AsyncStorage.removeItem('gameID');
-        clearInterval(this.state.timer);
         this.props.navigation.navigate('GameOver', {isWinner: isWinner});
     }
 
