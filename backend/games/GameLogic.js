@@ -210,10 +210,17 @@ function startAwardingPointsForCaptureZones(gameId) {
     while (!done) {
       console.log('loop');
       // find the game doc by it's _id
-      Game.findOne({_id: gameId}, async (err, game) => {
+      Game.findOne({_id: ObjectId(gameId)}, async (err, game) => {
         if (err || !game) {
           done = true;
-          return resolve(`id = ${gameId} doesn't exists. It might've been deleted if all users left.`);
+          return resolve(
+            `id = ${gameId} doesn't exists. It might've been deleted if all users left.`);
+        }
+
+        // winner has been set, implies the game is over
+        if (game.winner) {
+          done = true;
+          return resolve(`${game.winner} won ${gameId}`);
         }
 
         // iterate over every region for this game
@@ -236,7 +243,7 @@ function startAwardingPointsForCaptureZones(gameId) {
 
 function startGameTimer(gameId) {
   return new Promise((resolve, reject) => {
-    Game.findOne({_id: gameId}, (err, game) => {
+    Game.findOne({_id: ObjectId(gameId)}, (err, game) => {
       if (err || !game) {
         reject(err || `startGameTimer: no such game, _id = ${gameId}`);
       }
@@ -258,17 +265,19 @@ function startGameTimer(gameId) {
 
 function endGame(gameId) {
   return new Promise((resolve, reject) => {
-    Game.findOne({_id: gameId}, (err, game) => {
-      if (err || !game) reject(err || `endGame: no such game, _id = ${gameId}`);
+    Game.findOne({_id: ObjectId(gameId)}, (err, game) => {
+      if (err || !game) return reject(err || `endGame: no such game, _id = ${gameId}`);
 
       let highScore = -1;
       let winner = null;
 
       for (let userId in game.scores) {
-        let score = game.scores[userId];
-        if (score > highScore) {
-          highScore = score;
-          winner = userId;
+        if (userId) {
+          let score = game.scores[userId];
+          if (score > highScore) {
+            highScore = score;
+            winner = userId;
+          }
         }
       }
 

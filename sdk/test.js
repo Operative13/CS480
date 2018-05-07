@@ -20,6 +20,9 @@ const userJames = new User(baseConnection);
 const userJohn = new User(baseConnection);
 const user3 = new User(baseConnection);
 const game = new Game(baseConnection, require('ws'));
+const game2 = new Game(baseConnection, require('ws'));
+
+const GameConfig = require('../backend/games/GameConfiguration');
 
 /**
  * Connect to the proper mongoDB URI
@@ -247,6 +250,37 @@ describe('Game#leave: have each user leave the game', () => {
       })
   });
 });
+
+describe('change game time to 6 seconds, add john to the 2nd game, ' +
+  'move him to capture zone', () => {
+  it('should end the game as time runs out with john declared as winner', async function() {
+    this.timeout(8000);
+    GameConfig.gameDuration = 6;
+    await wait(0.5);
+
+    return game2.create('game2', userJohn.id, 1, 1,)
+      .then(json => {
+        let lat = json.regions[0].lat;
+        let lon = json.regions[0].lon;
+
+        return game2.setGeolocation(userJohn.id, lon, lat)
+          .then(async (json) => {
+            await wait(6);
+
+            return game2.getGame()
+              .then(json => {
+                console.log(json);
+                assert(json.winner === userJohn.id, 'john is the winner');
+              })
+              .catch(err => err)
+          })
+          .catch(err => err)
+      })
+    .catch(err => err)
+  });
+});
+
+// region: helper functions //
 
 function wait(time) {
   return new Promise(resolve => {
