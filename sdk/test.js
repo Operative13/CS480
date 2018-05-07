@@ -199,7 +199,7 @@ describe('Game#join: have john join the game james is in', () => {
   })
 });
 
-describe('john joins the game directly on top of a capture region', () => {
+describe('john moves directly on top of a capture region', () => {
   it('should change that region owner to john\'s id', function() {
     let lat = game.regions[0].lat;
     let lon = game.regions[0].lon;
@@ -212,6 +212,20 @@ describe('john joins the game directly on top of a capture region', () => {
         throw new Error(err.message || err.data);
         // done(new Error(err.message || err.data))
       });
+  });
+});
+
+describe('wait 5.1 seconds and check john\'s score', () => {
+  it('should indicate that john has a score of 1', async function() {
+    this.timeout(6000);
+    await wait(5.1);
+    return game.getGame()
+      .then(json => {
+        assert(json.scores[userJohn.id] === 1);
+      })
+      .catch(err => {
+        throw new Error(err.message);
+      })
   });
 });
 
@@ -233,3 +247,12 @@ describe('Game#leave: have each user leave the game', () => {
       })
   });
 });
+
+function wait(time) {
+  return new Promise(resolve => {
+    setTimeout(
+      () => resolve(),
+      time * 1000,
+    );
+  })
+}

@@ -180,9 +180,11 @@ module.exports = class Game {
    *  reject contains an error
    */
   getGame(gameId) {
-    if (!gameId) gameId = this.id;
+    gameId = gameId || this.id;
 
     return new Promise((resolve, reject) => {
+      if (!gameId) reject('game id was not give or not updated for this object');
+
       fetch(
         `${this._url}/${gameId}`,
         {
