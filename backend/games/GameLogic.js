@@ -6,7 +6,7 @@
 let __doc__;
 
 const exceptions = require('../exceptions/exceptions');
-const GameConfig = require('./GameConfiguration');
+var GameConfig = require('./GameConfiguration');
 const Game = new require('./Game');
 const {
   RequestRejectedException,
@@ -179,6 +179,7 @@ function updateRegions(game) {
  * @returns {Promise}
  */
 function startGame(gameId) {
+  // GameConfig = require('./GameConfiguration');
   startGameTimer(gameId);
   return startAwardingPointsForCaptureZones(gameId);
 }
@@ -228,6 +229,17 @@ function startAwardingPointsForCaptureZones(gameId) {
           let owner = String(region['owner']);
           if (owner) {
             game['scores'][owner] += GameConfig.pointsPerCaptureZone;
+
+            // check if the user won
+            if (game['scores'][owner] >= GameConfig.pointsNeededToWin) {
+              done = true;
+              game.winner = owner;
+
+              // save doc and resolve this function
+              return await game.save()
+                .then(game => resolve(`${game.winner} won ${gameId}`))
+                .catch(reject);
+            }
           }
         }
 

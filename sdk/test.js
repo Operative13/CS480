@@ -21,6 +21,7 @@ const userJohn = new User(baseConnection);
 const user3 = new User(baseConnection);
 const game = new Game(baseConnection, require('ws'));
 const game2 = new Game(baseConnection, require('ws'));
+const game3 = new Game(baseConnection, require('ws'));
 
 const GameConfig = require('../backend/games/GameConfiguration');
 
@@ -256,6 +257,8 @@ describe('change game time to 6 seconds, add john to the 2nd game, ' +
   it('should end the game as time runs out with john declared as winner', async function() {
     this.timeout(8000);
     GameConfig.gameDuration = 6;
+    // GameConfig.setValue('gameDuration', 6);
+
     await wait(0.5);
 
     return game2.create('game2', userJohn.id, 1, 1,)
@@ -268,6 +271,36 @@ describe('change game time to 6 seconds, add john to the 2nd game, ' +
             await wait(6);
 
             return game2.getGame()
+              .then(json => {
+                console.log(json);
+                assert(json.winner === userJohn.id, 'john is the winner');
+              })
+              .catch(err => err)
+          })
+          .catch(err => err)
+      })
+    .catch(err => err)
+  });
+});
+
+describe('change game win score to 1, add john to the 3rd game, ' +
+  'move him to capture zone, wait for him to be awarded points', () => {
+  it('should end the game as john acquired enough points to win', async function() {
+    this.timeout(8000);
+    GameConfig.pointsNeededToWin = 1;
+
+    await wait(0.5);
+
+    return game3.create('game3', userJohn.id, 1, 1,)
+      .then(json => {
+        let lat = json.regions[0].lat;
+        let lon = json.regions[0].lon;
+
+        return game3.setGeolocation(userJohn.id, lon, lat)
+          .then(async (json) => {
+            await wait(6);
+
+            return game3.getGame()
               .then(json => {
                 console.log(json);
                 assert(json.winner === userJohn.id, 'john is the winner');

@@ -6,6 +6,7 @@ router.use(bodyParser.json());
 const ObjectId = require('mongoose').Types.ObjectId;
 
 // local imports
+const GameConfig = require('./GameConfiguration');
 const Game = new require('./Game');
 const UserFunctions = require('../users/UserFunctions');
 const GameLogic = require('./GameLogic');
@@ -13,7 +14,7 @@ const {
   joinGame,
   joinGameByName,
 } = require('./GameManagement');
-const GameFunctions = require('./GameManagement');
+const GameManagement = require('./GameManagement');
 const {
   requestError,
   serverError,
@@ -43,6 +44,7 @@ router.get('/', function(req, res) {
  * }
  */
 router.post('/create', function(req, res) {
+  // console.log(JSON.stringify(GameConfig, null, 2));
   let lat = req.body.lat;
   let lon = req.body.lon;
 
@@ -196,7 +198,7 @@ router.post('/leave/:id', (req, res) => {
       return requestError(res, new Error(msg));
     }
 
-    GameFunctions.removeUser(game, req.body.userId)
+    GameManagement.removeUser(game, req.body.userId)
       .then((game) => success(res, game))
       .catch(err => requestError(res, err));
   });
