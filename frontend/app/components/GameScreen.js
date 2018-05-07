@@ -22,7 +22,6 @@ export default class GameScreen extends React.Component {
     constructor(props){
         super(props);
         this.state = {
-            isWinner: false,
             region: {
                 latitude: 34.0576,
                 longitude: -117.8207,
@@ -55,6 +54,10 @@ export default class GameScreen extends React.Component {
             numErrors: 0,
             nodes: [],
             initialStateSet: false,
+            initialGetGame: false,
+            score: 0,
+            enemyScore: 0,
+            timeLeft: 10,
         };
         //initial game id
         const {params} = this.props.navigation.state;
@@ -89,14 +92,18 @@ export default class GameScreen extends React.Component {
         this.updateGeolocation();
         let timer = setInterval(this.updateGeolocation, this.geolocationUpdatePeriod);
         this.setState({timer});
-        this.game.getGame(this.state.gameID)
-            .then((response) => {
-                this.updateNodes(this.game.regions);
-            })
         this.game.listenForRegionChange(this.updateNodes)
 
         console.log("gameID: " + this.state.gameID);
         console.log("userID: " + this.state.userID);
+    }
+
+    calcTimeLeft = (startTime) => {
+        let startDate = new Date(startTime);
+        let timeElapsed = (Date.now() - startDate)/1000;
+        let timeLeft = 600 - timeElapsed;
+        console.log("TIME LEFT: " + timeLeft)
+        return timeLeft
     }
 
     _loadInitialState = async () => {
@@ -116,6 +123,14 @@ export default class GameScreen extends React.Component {
             alert('error getting game ID');
             this.props.navigation.pop(1);
         }
+
+        this.game.getGame(this.state.gameID)
+            .then((response) => {
+                this.updateNodes(this.game.regions);
+                this.setState({timeLeft: this.calcTimeLeft(response.startTime)})
+                this.state.initialGetGame = true;
+            })
+
         this.state.initialStateSet = true;
     };
 
@@ -146,6 +161,7 @@ export default class GameScreen extends React.Component {
                         .then((response) => {
                             //console.log(response);
                             this.setState({numErrors: 0});
+                            this.checkWinner(response.winner);
                             //this.updateNodes(response.regions);
                             this.updatePlayers(position, response);
                         })
@@ -191,7 +207,7 @@ export default class GameScreen extends React.Component {
                 longitude: 0,
             };
 
-            for (let userId in this.game.geolocations) {
+            for (let userId in response.geolocations) {
                 if (response.geolocations.hasOwnProperty(userId) && userId !== this.state.userID) {
                     coordEnemy.latitude = response.geolocations[userId].lat;
                     coordEnemy.longitude = response.geolocations[userId].lon;
@@ -216,6 +232,16 @@ export default class GameScreen extends React.Component {
             this.setState({
                 playerMarkers: playerMarkers
             });
+
+            //update players score
+            for (let userId in response.scores) {
+                if (userId !== 'null' && userId !== this.state.userID) {
+                    this.setState({enemyScore: response.scores[userId]})
+                }
+                if (userId !== 'null' && userId === this.state.userID ){
+                    this.setState({score: response.scores[userId]})
+                }
+            }
         }
         catch (error){
             console.error(error)
@@ -286,9 +312,24 @@ export default class GameScreen extends React.Component {
         this.setState({nodes: nodes});
     };
 
+    /**
+     * ->checks if the game document has returned a winner and the game should be over
+     * @param winner - values of null, userID, or the enemys ID
+     */
+    checkWinner = (winner) => {
+        if(winner != null)
+        {
+            if(winner === this.state.userID){
+                this.endGame(true)
+            }
+            else {
+                this.endGame(false)
+            }
+        }
+    }
 
     render(){
-        if(this.state.regionSet && this.state.initialStateSet) {
+        if(this.state.regionSet && this.state.initialStateSet && this.state.initialGetGame) {
             return (
                 <View style={styles.wrapper}>
                     <View style={styles.container}>
@@ -296,6 +337,7 @@ export default class GameScreen extends React.Component {
                                  initialRegion={this.state.region}
                                  onRegionChangeComplete={(region) => this.onRegionChange(region)}
                                  key={"gs-map-view"}
+                                 showsCompass={false}
                         >
                             {this.state.playerMarkers.map(marker => (
                                 <Marker
@@ -321,18 +363,25 @@ export default class GameScreen extends React.Component {
                             ))}
 
                         </MapView>
-                        <View>
-                            <TouchableOpacity
-                                style={styles.btn}
-                                onPress={this.quitGame}
-                            >
-                                <Text>Quit</Text>
-                            </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.btn}
+                            onPress={this.quitGame}
+                        >
+                            <Text>Click Here to Quit</Text>
+                        </TouchableOpacity>
+                        <View style = {styles.scoreDisplay}>
+                            <Text >
+                                Score: {this.state.score} {"   "}
+                                Enemy: {this.state.enemyScore}
+                            </Text>
+                        </View>
+                        <View style={{flexDirection: 'row', justifyContent: 'center'}}>
                             <CountDown
-                                until={600}
+                                until={this.state.timeLeft}
                                 size={15}
                                 timeToShow={['M', 'S']}
                             />
+
                         </View>
 
                     </View>
@@ -366,12 +415,12 @@ export default class GameScreen extends React.Component {
     }
 
 
-    endGame = () => {
+    endGame = (isWinner) => {
         //alert('ending game');
         this.game.leave(this.state.userID, this.state.gameID);
         AsyncStorage.removeItem('gameID');
         clearInterval(this.state.timer);
-        this.props.navigation.navigate('GameOver', {isWinner: this.state.isWinner});
+        this.props.navigation.navigate('GameOver', {isWinner: isWinner});
     }
 
 }
@@ -394,7 +443,7 @@ const styles = StyleSheet.create({
         padding: 5,
         alignItems: 'center',
         marginBottom: 10,
-        marginTop: 20,
+        marginTop: 10,
     },
     container: {
         flex: 1,
@@ -404,5 +453,13 @@ const styles = StyleSheet.create({
     },
     map: {
         ...StyleSheet.absoluteFillObject,
+    },
+    scoreDisplay: {
+        alignSelf: 'stretch',
+        backgroundColor: '#FAB913',
+        padding: 5,
+        alignItems: 'center',
+        marginBottom: 10,
+        marginTop: 0,
     },
 });
