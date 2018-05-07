@@ -76,7 +76,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) reject(getErrorFromFailOrError(json));
+              if (!response.ok) return reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);
@@ -118,7 +118,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) reject(getErrorFromFailOrError(json));
+              if (!response.ok) return reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);
@@ -160,7 +160,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) reject(getErrorFromFailOrError(json));
+              if (!response.ok) return reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);
@@ -197,7 +197,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) reject(getErrorFromFailOrError(json));
+              if (!response.ok) return reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);
@@ -233,7 +233,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) reject(getErrorFromFailOrError(json));
+              if (!response.ok) return reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);
