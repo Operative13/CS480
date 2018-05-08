@@ -161,7 +161,7 @@ function createEvenlyDistributedRegions(
   }
 
   let theta = Math.PI / 2;
-  let deltaTheta = 2 * Math.PI * numberOfRegions;
+  let deltaTheta = 2 * Math.PI / numberOfRegions;
   let regions = [];
 
   for (let i = 0; i < numberOfRegions; i++) {
