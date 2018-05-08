@@ -7,14 +7,15 @@ export default class GameOver extends React.Component {
     constructor(props){
         super(props);
         this.state = {
-            endText: '',
+            endText: "",
         };
         const {params} = this.props.navigation.state;
-        const isWinner = params ? params.isWinner : null;
+        const isWinner = params.isWinner;
+        console.log("isWinner in GameOver screen: " + isWinner );
         if(isWinner)
-            this.setState({endText:'WINNER'});
+            this.state.endText = "WINNER";
         else
-            this.setState({endText:'LOSER'});
+            this.state.endText = "LOSER";
     }
 
     render(){

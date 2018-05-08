@@ -255,7 +255,7 @@ export default class GameScreen extends React.Component {
     updateNodes = (regions) => {
         let nodes=[];
         //console.log("updateNodes: " + JSON.stringify(regions));
-        //console.log(this.game.regions)
+        console.log(this.game.regions)
         for(let item in regions){
             //console.log("node: " + JSON.stringify(item));
             let coord = {
@@ -422,6 +422,7 @@ export default class GameScreen extends React.Component {
      * @param isWinner - true or false value that will be passed to the GameOver screen
      */
     endGame = (isWinner) => {
+        console.log("isWinner in endGame: " + isWinner );
         //alert('ending game');
         clearInterval(this.state.timer);
         this.game.leave(this.state.userID, this.state.gameID);
