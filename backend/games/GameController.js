@@ -62,8 +62,12 @@ router.post('/create', function(req, res) {
 
       let gameInfo = {
         name: req.body.name,
-        regions: GameLogic.createCircularRegions(
-          lat, lon, minRadius=5, maxRadius=20, owner=null, regionType="fort"
+        // regions: GameLogic.createCircularRegions(
+        //   lat, lon, minRadius=5, maxRadius=20, owner=null, regionType="fort"
+        // ),
+        regions: GameLogic.createEvenlyDistributedRegions(
+          lat, lon, radius=7, owner=null, regionType='fort', numberOfRegions=3,
+          mainBoundaryLimit=17,
         ),
         scores: {},
       };

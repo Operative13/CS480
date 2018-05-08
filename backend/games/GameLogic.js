@@ -56,6 +56,31 @@ function measure(lat1, lon1, lat2, lon2) {
 }
 
 /**
+ * Get the lat and lon a certain number of meters north and east
+ * source of code: https://gis.stackexchange.com/a/2980
+ * @param startLat {Number} - origin
+ * @param startLon {Number} - origin
+ * @param distanceNorth {Number} - distance north in meters (negative if south)
+ * @param distanceEast {Number} - distance east in meters (negative if west)
+ * @returns {[Number, Number]} lat, lon
+ */
+function getLatLon(startLat, startLon, distanceNorth, distanceEast) {
+ //Earth’s radius, sphere
+ let R=6378137;
+
+ //Coordinate offsets in radians
+ let dLat = distanceNorth/R;
+ let dLon = distanceEast/(R*Math.cos(Math.PI* startLat/180));
+
+ //OffsetPosition, decimal degrees
+ let lat = startLat + dLat * 180 / Math.PI;
+ let lon = startLon + dLon * 180/Math.PI;
+
+ return [lat, lon];
+}
+
+
+/**
  * Create numberOfRegions regions whose boundaries are within
  * the main circular boundary or playing field.
  * @param centerLat
@@ -104,6 +129,55 @@ function createCircularRegions(centerLat, centerLon, minRadius=5, maxRadius=20,
     };
 
     regions.push(region);
+  }
+
+  return regions;
+}
+
+
+/**
+ * Create numberOfRegions regions whose boundaries are within
+ * the main circular boundary or playing field.
+ * @param centerLat
+ * @param centerLon
+ * @param minRadius {Number} - in meters
+ * @param maxRadius {Number} - in meters
+ * @param owner
+ * @param regionType
+ * @param numberOfRegions
+ * @param mainBoundaryLimit {Number} - max distance a randomly placed region
+ *  can be created (in meters)
+ * @returns {Array<Object>} the array of regions where each element is an
+ *  object that contains a lat, lon, radius, owner, type
+ * @throws {Error} if invalid regionType is given
+ */
+function createEvenlyDistributedRegions(
+    centerLat, centerLon, radius=7, owner=null,
+    regionType="fort", numberOfRegions=3, mainBoundaryLimit=17) {
+
+  // validate regionType
+  if (!GameConfig.regionTypes.hasOwnProperty(regionType)) {
+    throw new Error(`invalid regionType given, regionType = ${regionType}`);
+  }
+
+  let theta = 90;
+  let deltaTheta = 360 / numberOfRegions;
+  let regions = [];
+
+  for (let i = 0; i < numberOfRegions; i++) {
+    let north = Math.cos(theta) * mainBoundaryLimit;
+    let east = Math.sin(theta) * mainBoundaryLimit;
+    let [lat, lon] = getLatLon(centerLat, centerLon, north, east);
+
+    regions.push({
+      lat,
+      lon,
+      radius,
+      owner,
+      type: regionType,
+    });
+
+    theta += deltaTheta;
   }
 
   return regions;
@@ -305,6 +379,7 @@ module.exports = {
   fiftyMetersInDeltaLatitude,
   fiftyMetersInDeltaLongitude,
   createCircularRegions,
+  createEvenlyDistributedRegions,
   updateRegions,
   regionChangeEvent,
   startGame,
