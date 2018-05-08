@@ -145,7 +145,22 @@ function addUser(game, userInfo) {
  */
 function removeUser(game, userId, deleteEmptyGame=true) {
   return new Promise((resolve, reject) => {
-    delete game.geolocations[userId];
+    // geolocations attribute was getting removed after a user left game in
+    // frontend of app
+    if (!game.geolocations) {
+      let msg = `game is missing geolocations\n${JSON.stringify(game)}`;
+      // return reject(new Error(msg));
+      console.warn(msg);
+    } else {
+      if (userId in game.geolocations) {
+        delete game.geolocations[userId];
+      }
+      // still need to remove userId from game.users if it's there, just warn here
+      else {
+        console.warn(`game.name = ${game.name} had no user with id of ${userId} in its geolocations`);
+      }
+    }
+
     // we're actually comparing a String and an ObjectId
     let removeIndex = game.users.findIndex((id) => id == userId);
     if (removeIndex === -1) {
@@ -190,6 +205,13 @@ function deleteGame(gameId) {
   });
 }
 
+/**
+ * Check if a user is in a game
+ * @param userId {String}
+ * @returns {Promise<[Boolean, Document]>} - an array with 1st element
+ *  indicating whether the user is in a game or not. 2nd element being the
+ *  game that the user is in (if any; could be null if none)
+ */
 function isUserInAGame(userId) {
   return new Promise((resolve, reject) => {
     let id = String(userId);

@@ -140,9 +140,8 @@ function createCircularRegions(centerLat, centerLon, minRadius=5, maxRadius=20,
  * the main circular boundary or playing field.
  * @param centerLat
  * @param centerLon
- * @param minRadius {Number} - in meters
- * @param maxRadius {Number} - in meters
- * @param owner
+ * @param radius {Number} - size of each region created in meters
+ * @param owner {String}
  * @param regionType
  * @param numberOfRegions
  * @param mainBoundaryLimit {Number} - max distance a randomly placed region
@@ -153,14 +152,17 @@ function createCircularRegions(centerLat, centerLon, minRadius=5, maxRadius=20,
  */
 function createEvenlyDistributedRegions(
     centerLat, centerLon, radius=7, owner=null,
-    regionType="fort", numberOfRegions=5, mainBoundaryLimit=17) {
+    regionType="fort", numberOfRegions=5, mainBoundaryLimit=20) {
 
   // validate regionType
   if (!GameConfig.regionTypes.hasOwnProperty(regionType)) {
     throw new Error(`invalid regionType given, regionType = ${regionType}`);
   }
 
+  // first region created directly north of user start position
   let theta = Math.PI / 2;
+
+  // angle between user, previous region, and next region (in radians)
   let deltaTheta = 2 * Math.PI / numberOfRegions;
   let regions = [];
 
@@ -230,9 +232,7 @@ function updateRegions(game) {
   } // end regions loop
 
   if (aRegionWasChanged) {
-    // console.log(`GameFunctions#updateRegions: game _id = ${game._id} regions
-    //   changed to ${JSON.stringify(updatedRegions, null, 2)}`);
-
+    // emit an internal event that'll in turn send a message using a websocket
     regionChangeEvent.emit(String(game._id), updatedRegions);
 
     game['regions'] = updatedRegions;
