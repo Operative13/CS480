@@ -153,7 +153,7 @@ function createCircularRegions(centerLat, centerLon, minRadius=5, maxRadius=20,
  */
 function createEvenlyDistributedRegions(
     centerLat, centerLon, radius=7, owner=null,
-    regionType="fort", numberOfRegions=3, mainBoundaryLimit=17) {
+    regionType="fort", numberOfRegions=5, mainBoundaryLimit=17) {
 
   // validate regionType
   if (!GameConfig.regionTypes.hasOwnProperty(regionType)) {
