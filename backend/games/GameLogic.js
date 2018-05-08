@@ -160,13 +160,15 @@ function createEvenlyDistributedRegions(
     throw new Error(`invalid regionType given, regionType = ${regionType}`);
   }
 
-  let theta = 90;
-  let deltaTheta = 360 / numberOfRegions;
+  let theta = Math.PI / 2;
+  let deltaTheta = 2 * Math.PI * numberOfRegions;
   let regions = [];
 
   for (let i = 0; i < numberOfRegions; i++) {
-    let north = Math.cos(theta) * mainBoundaryLimit;
-    let east = Math.sin(theta) * mainBoundaryLimit;
+    // x
+    let east = Math.cos(theta) * mainBoundaryLimit;
+    // y
+    let north = Math.sin(theta) * mainBoundaryLimit;
     let [lat, lon] = getLatLon(centerLat, centerLon, north, east);
 
     regions.push({
