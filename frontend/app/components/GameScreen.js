@@ -143,6 +143,18 @@ export default class GameScreen extends React.Component {
    * @returns {Promise<void>}
    */
   updateGeolocation = () => {
+        function measure(lat1, lon1, lat2, lon2) {
+          let R = 6378.137; // Radius of earth in KM
+          let dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
+          let dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
+          let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+          let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          let d = R * c;
+          return d * 1000; // meters
+        }
+
         try {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -156,9 +168,18 @@ export default class GameScreen extends React.Component {
                         this.setState({region, regionSet: true})
                     }
 
-                    //update geolocation on server
-                    this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
-                        .then((response) => {
+                    let minDeltaDistanceToUpdate = 2;
+                    // position didn't change enough
+                    else if (measure(
+                        this.state.region.latitude,
+                        this.state.region.longitude,
+                        position.latitude,
+                        position.longitude,) < minDeltaDistanceToUpdate) {
+
+                        console.log('user didn\'t move far enough to update');
+
+                        this.game.getGame()
+                          .then((response) => {
                             //console.log(response);
                             this.setState({numErrors: 0});
                             this.checkWinner(response.winner);
@@ -175,6 +196,29 @@ export default class GameScreen extends React.Component {
                                 alert(err);
                             }
                         });
+                    }
+
+                    else {
+                        //update geolocation on server
+                        this.game.setGeolocation(this.state.userID, position.coords.longitude, position.coords.latitude)
+                            .then((response) => {
+                                //console.log(response);
+                                this.setState({numErrors: 0});
+                                this.checkWinner(response.winner);
+                                //this.updateNodes(response.regions);
+                                this.updatePlayers(position, response);
+                            })
+                            .catch((err) => {
+                                console.error(err);
+                                //TODO
+                                //figure out what the specific way to check for "TypeError: Network request failed" is
+                                let numErrors = this.state.numErrors + 1;
+                                this.setState({numErrors: numErrors});
+                                if (numErrors > 5) {
+                                    alert(err);
+                                }
+                            });
+                    }
                 },
                 (err) => {
                     console.log(err)
