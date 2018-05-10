@@ -5,15 +5,9 @@ Nodejs and express app that serves as our REST API
 ## Requires
 
 - [nodejs](https://nodejs.org/en/)
-- redis-server
 
 ## Install
- 
-if your OS is some debian variant, 
-`sudo apt install redis-server`
-
-otherwise, figure out what to install to run `redis-server` 
- 
+  
 ```
 git clone git@github.com:Operative13/CS480.git
 cd CS480/backend
@@ -30,16 +24,7 @@ From backend directory
 
 ```
 npm start
-```
-
-`redis-server` needs to be running in order for notification system to work
-(this is run via `npm start` right before `nodemon` is used to run our server)
-
-you might need to `npm i nodemon`
-
-Alternatively, just use `node` instead of `nodemon` (with `node server.js`)
-to run the server 
-(`npm start` will invoke the script at the location specified in package.json) 
+``` 
 
 ## Dev Tools
 
@@ -55,12 +40,3 @@ Note2: mongo-server (`mongod`) might need to run in parallel before you can use
 `mongo` (mongo-shell or mongo-client at least). See
 https://github.com/Operative13/CS480/wiki/How-to-Install-MongoDB for help on 
 installing mongodb
-
----
-
-boilerplate code for RESTful API for users originated from:
-https://hackernoon.com/restful-api-design-with-node-js-26ccf66eab09#.s5l66zyeu
-
-boilerplate code for creating events at routes for client-sided JS to listen
-on and respond to: 
-https://tomkersten.com/articles/server-sent-events-with-node/
