@@ -1,5 +1,14 @@
 {
   "expo": {
-    "sdkVersion": "26.0.0"
+   "name": "Kingdoms Game",
+   "version": "0.2.0",
+   "slug": "kingdoms-game-frontend",
+   "sdkVersion": "26.0.0",
+   "ios": {
+     "bundleIdentifier": "cs480.kingdomsgame"
+   },
+   "android": {
+     "package": "cs480.kingdomsgame"
+   }
   }
 }

@@ -1,5 +1,21 @@
 # CS480
 
+Kingdoms Game is an augmented reality mobile multiplayer game in which two 
+players compete to control zones to gain more points.
+
+Technology Stack:
+- React Native
+- Node.js with Express
+- MongoDB
+
+The backend is designed as a REST API following the JSend 
+standards. The sdk is a wrapper for the API which acts
+like a controller. The frontend utilizes the sdk to
+send and receive info from the server for users & games.
+
+[demo videos](https://www.youtube.com/playlist?list=PLQRGmPzigd22IQc9WlHTZEykF5Z26iejd)
+
+---
 
 [backend readme](backend/README.md)
 

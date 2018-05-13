@@ -56,6 +56,31 @@ function measure(lat1, lon1, lat2, lon2) {
 }
 
 /**
+ * Get the lat and lon a certain number of meters north and east
+ * source of code: https://gis.stackexchange.com/a/2980
+ * @param startLat {Number} - origin
+ * @param startLon {Number} - origin
+ * @param distanceNorth {Number} - distance north in meters (negative if south)
+ * @param distanceEast {Number} - distance east in meters (negative if west)
+ * @returns {[Number, Number]} lat, lon
+ */
+function getLatLon(startLat, startLon, distanceNorth, distanceEast) {
+ //Earth’s radius, sphere
+ let R=6378137;
+
+ //Coordinate offsets in radians
+ let dLat = distanceNorth/R;
+ let dLon = distanceEast/(R*Math.cos(Math.PI* startLat/180));
+
+ //OffsetPosition, decimal degrees
+ let lat = startLat + dLat * 180 / Math.PI;
+ let lon = startLon + dLon * 180/Math.PI;
+
+ return [lat, lon];
+}
+
+
+/**
  * Create numberOfRegions regions whose boundaries are within
  * the main circular boundary or playing field.
  * @param centerLat
@@ -109,6 +134,59 @@ function createCircularRegions(centerLat, centerLon, minRadius=5, maxRadius=20,
   return regions;
 }
 
+
+/**
+ * Create numberOfRegions regions whose boundaries are within
+ * the main circular boundary or playing field.
+ * @param centerLat
+ * @param centerLon
+ * @param radius {Number} - size of each region created in meters
+ * @param owner {String}
+ * @param regionType
+ * @param numberOfRegions
+ * @param mainBoundaryLimit {Number} - max distance a randomly placed region
+ *  can be created (in meters)
+ * @returns {Array<Object>} the array of regions where each element is an
+ *  object that contains a lat, lon, radius, owner, type
+ * @throws {Error} if invalid regionType is given
+ */
+function createEvenlyDistributedRegions(
+    centerLat, centerLon, radius=7, owner=null,
+    regionType="fort", numberOfRegions=5, mainBoundaryLimit=20) {
+
+  // validate regionType
+  if (!GameConfig.regionTypes.hasOwnProperty(regionType)) {
+    throw new Error(`invalid regionType given, regionType = ${regionType}`);
+  }
+
+  // first region created directly north of user start position
+  let theta = Math.PI / 2;
+
+  // angle between user, previous region, and next region (in radians)
+  let deltaTheta = 2 * Math.PI / numberOfRegions;
+  let regions = [];
+
+  for (let i = 0; i < numberOfRegions; i++) {
+    // x
+    let east = Math.cos(theta) * mainBoundaryLimit;
+    // y
+    let north = Math.sin(theta) * mainBoundaryLimit;
+    let [lat, lon] = getLatLon(centerLat, centerLon, north, east);
+
+    regions.push({
+      lat,
+      lon,
+      radius,
+      owner,
+      type: regionType,
+    });
+
+    theta += deltaTheta;
+  }
+
+  return regions;
+}
+
 /**
  * Checks the users geolocations and updates the owner of each region
  * if there's a user in that capture region. If two users stand in the same
@@ -154,9 +232,7 @@ function updateRegions(game) {
   } // end regions loop
 
   if (aRegionWasChanged) {
-    // console.log(`GameFunctions#updateRegions: game _id = ${game._id} regions
-    //   changed to ${JSON.stringify(updatedRegions, null, 2)}`);
-
+    // emit an internal event that'll in turn send a message using a websocket
     regionChangeEvent.emit(String(game._id), updatedRegions);
 
     game['regions'] = updatedRegions;
@@ -305,6 +381,7 @@ module.exports = {
   fiftyMetersInDeltaLatitude,
   fiftyMetersInDeltaLongitude,
   createCircularRegions,
+  createEvenlyDistributedRegions,
   updateRegions,
   regionChangeEvent,
   startGame,
