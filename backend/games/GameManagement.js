@@ -110,6 +110,7 @@ function addUser(game, userInfo) {
           game.scores = {};
         }
         game.scores[userInfo.userId] = 0;
+        game.troops[userInfo.userId] = GameConfig.initialTroopsForPlayer;
 
         // required when modifying and saving value(s) of a property of type Mixed
         // or of type Object in schema

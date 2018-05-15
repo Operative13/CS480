@@ -81,6 +81,7 @@ function getLatLon(startLat, startLon, distanceNorth, distanceEast) {
 
 
 /**
+ * @deprecated
  * Create numberOfRegions regions whose boundaries are within
  * the main circular boundary or playing field.
  * @param centerLat
@@ -179,6 +180,7 @@ function createEvenlyDistributedRegions(
       radius,
       owner,
       type: regionType,
+      troops: GameConfig.initialTroopsForCaptureZone,
     });
 
     theta += deltaTheta;
@@ -257,7 +259,7 @@ function updateRegions(game) {
 function startGame(gameId) {
   // GameConfig = require('./GameConfiguration');
   startGameTimer(gameId);
-  return startAwardingPointsForCaptureZones(gameId);
+  return gameLoop(gameId);
 }
 
 /**
@@ -266,7 +268,7 @@ function startGame(gameId) {
  * @param gameId {ObjectId} - id of the game
  * @returns {Promise} - resolves once the game has been deleted
  */
-function startAwardingPointsForCaptureZones(gameId) {
+function gameLoop(gameId) {
   /**
    * Wait some time.
    * @param time {Number} - amount of time to wait in seconds
@@ -300,26 +302,10 @@ function startAwardingPointsForCaptureZones(gameId) {
           return resolve(`${game.winner} won ${gameId}`);
         }
 
-        // iterate over every region for this game
-        for (let region of game['regions']) {
-          let owner = String(region['owner']);
-          if (owner) {
-            game['scores'][owner] += GameConfig.pointsPerCaptureZone;
-
-            // check if the user won
-            if (game['scores'][owner] >= GameConfig.pointsNeededToWin) {
-              done = true;
-              game.winner = owner;
-
-              // save doc and resolve this function
-              return await game.save()
-                .then(game => resolve(`${game.winner} won ${gameId}`))
-                .catch(reject);
-            }
-          }
-        }
+        await regionsLoop(game).catch(reject);
 
         game.markModified('scores');
+        game.markModified('regions');
         await game.save().catch(err => console.error(err));
       });
 
@@ -327,6 +313,35 @@ function startAwardingPointsForCaptureZones(gameId) {
       await wait(GameConfig.gameLoopPeriod);
     }
   });
+}
+
+async function regionsLoop(game) {
+  // iterate over every region for this game
+  for (let region of game['regions']) {
+    updateScore(game, region);
+    updateTroops(game, region);
+  }
+}
+
+async function updateScore(game, region) {
+  let owner = String(region['owner']);
+  if (owner) {
+    game['scores'][owner] += GameConfig.pointsPerCaptureZone;
+
+    // check if the user won
+    if (game['scores'][owner] >= GameConfig.pointsNeededToWin) {
+      game.winner = owner;
+
+      // save doc and resolve this function
+      return await game.save()
+        .then(game => resolve(`${game.winner} won ${gameId}`))
+        .catch(reject);
+    }
+  }
+}
+
+function updateTroops(game, region) {
+  region.troops += GameConfig.troopsPerCaptureZone;
 }
 
 function startGameTimer(gameId) {

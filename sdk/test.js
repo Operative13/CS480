@@ -23,7 +23,21 @@ const game = new Game(baseConnection, require('ws'));
 const game2 = new Game(baseConnection, require('ws'));
 const game3 = new Game(baseConnection, require('ws'));
 
-const GameConfig = require('../backend/games/GameConfiguration');
+const call = require('./shell');
+// const GameConfig = require('../backend/games/GameConfiguration');
+
+/**
+ * Load test game configuration settings by moving (renaming) files
+ */
+before(function() {
+  let testConfigDirectory = '../backend/games';
+  call(`mv ${testConfigDirectory}/GameConfiguration.js ${testConfigDirectory}/GameConfiguration1.js`)
+    .then(() => {
+      call(`mv ${testConfigDirectory}/GameConfiguration2.js ${testConfigDirectory}/GameConfiguration.js`)
+        .catch(console.error);
+    })
+    .catch(console.error);
+});
 
 /**
  * Connect to the proper mongoDB URI
@@ -252,30 +266,34 @@ describe('Game#leave: have each user leave the game', () => {
   });
 });
 
-describe('change game time to 6 seconds, add john to the 2nd game, ' +
+describe('add john to the 2nd game, ' +
   'move him to capture zone', () => {
   it('should end the game as time runs out with john declared as winner', async function() {
-    this.timeout(8000);
-    GameConfig.gameDuration = 6;
-    // GameConfig.setValue('gameDuration', 6);
-
-    await wait(0.5);
+    this.timeout(23000);  // 23 seconds
 
     return game2.create('game2', userJohn.id, 1, 1,)
       .then(json => {
         let lat = json.regions[0].lat;
         let lon = json.regions[0].lon;
 
+        // move john to the capture region
         return game2.setGeolocation(userJohn.id, lon, lat)
           .then(async (json) => {
             await wait(6);
 
-            return game2.getGame()
-              .then(json => {
-                console.log(json);
-                assert(json.winner === userJohn.id, 'john is the winner');
+            // move john out of the capture region
+            return game2.setGeolocation(userJohn.id, lon, lat)
+              .then(async (json) => {
+                await wait(15);
+
+                return game2.getGame()
+                  .then(json => {
+                    console.log(json);
+                    assert(json.winner === userJohn.id, 'john is the winner');
+                  })
+                  .catch(err => err)
               })
-              .catch(err => err)
+              .catch(err => err);
           })
           .catch(err => err)
       })
@@ -283,13 +301,20 @@ describe('change game time to 6 seconds, add john to the 2nd game, ' +
   });
 });
 
-describe('change game win score to 1, add john to the 3rd game, ' +
+describe('check the number of troops in the region john captured', () => {
+  it('should be 5 (1 for init capture, 4 for 4 game loops that occurred', () => {
+    return game2.getGame()
+      .then(json => {
+        assert(json.regions[0].troops === 5);
+      })
+      .catch(err => err)
+  });
+});
+
+describe('add john to the 3rd game, ' +
   'move him to capture zone, wait for him to be awarded points', () => {
   it('should end the game as john acquired enough points to win', async function() {
     this.timeout(8000);
-    GameConfig.pointsNeededToWin = 1;
-
-    await wait(0.5);
 
     return game3.create('game3', userJohn.id, 1, 1,)
       .then(json => {
@@ -313,6 +338,19 @@ describe('change game win score to 1, add john to the 3rd game, ' +
   });
 });
 
+/**
+ * Restore initial renaming of files
+ */
+after(function() {
+  let configDir = '../backend/games';
+  call(`mv ${configDir}/GameConfiguration1.js ${configDir}/GameConfiguration.js`)
+    .then(() => {
+      call(`mv ${configDir}/GameConfiguration.js ${configDir}/GameConfiguration2.js`)
+        .catch(console.error);
+    })
+    .catch(console.error);
+});
+
 // region: helper functions //
 
 function wait(time) {
@@ -323,3 +361,5 @@ function wait(time) {
     );
   })
 }
+
+// endregion: helper functions //

@@ -24,7 +24,7 @@ const config = {
   /**
    * Once a user in a game obtains this many points, he wins the game
    */
-  pointsNeededToWin: 100,
+  pointsNeededToWin: 2,
 
   /**
    * The amount of troops generated and placed inside a capture zone every tick
@@ -46,7 +46,10 @@ const config = {
    * After this much time (in seconds) elapses after the game is started,
    * the game ends and a winner is determined.
    */
-  gameDuration: 600,
+  gameDuration: 21,
 };
 
+/**
+ * Values changed to represent a shorter game session for usage in testing
+ */
 module.exports = config;
