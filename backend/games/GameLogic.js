@@ -324,7 +324,7 @@ function startAwardingPointsForCaptureZones(gameId) {
       });
 
       // wait some time
-      await wait(GameConfig.captureZonePointsAwardedPeriod);
+      await wait(GameConfig.gameLoopPeriod);
     }
   });
 }

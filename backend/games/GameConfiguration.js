@@ -10,10 +10,11 @@ const config = {
   },
 
   /**
-   * Points awarded to the owner of the capture zone(s) every x seconds
-   * where x is this value.
+   * The amount of time before the next game tick occurs. In game tick:
+   * Points awarded to the owner of the capture zone(s).
+   * Troops generated in each capture zone(s).
    */
-  captureZonePointsAwardedPeriod: 5,
+  gameLoopPeriod: 5,
 
   /**
    * The amount of points awarded for each capture zone owned
@@ -24,6 +25,16 @@ const config = {
    * Once a user in a game obtains this many points, he wins the game
    */
   pointsNeededToWin: 100,
+
+  /**
+   * The amount of troops generated and placed inside a capture zone every tick
+   */
+  troopsPerCaptureZone: 1,
+
+  /**
+   * The initial amount of troops given to the player when he joins the game
+   */
+  initialTroopsForPlayer: 10,
 
   /**
    * After this much time (in seconds) elapses after the game is started,

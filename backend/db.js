@@ -1,3 +1,4 @@
+// const Mongorito = require('mongorito');
 const mongoose = require('mongoose');
 
 /**
@@ -21,6 +22,8 @@ function connectToDb(mongoDbUri) {
         console.log(`MongoDB failed to run at ${uri}`)
         console.error(reason);
       });
+
+    // let conn = new Mongorito(uri);
   }
 
   if (!mongoDbUri) {

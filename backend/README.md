@@ -31,7 +31,7 @@ npm start
 | Program | Purpose |
 | --- | --- |
 | Webstorm | IDE |
-| Postman | Creates HTTP requests & allows for changes in request body or header |
+| Postman | Creates HTTP requests with user defined request body or header |
 | mongo-shell | Interact with MongoDB directly |
 
 Note: mlab.com requires mongo v3.0 or higher (Debian repos outdated as always)

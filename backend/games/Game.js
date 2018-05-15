@@ -24,11 +24,20 @@ const GameSchema = new Schema({
 
   /**
    * as circular regions or nodes or zones this can look something like
-   * [{lon: 123, lat: 123, radius: 44, owner: "123abc", type: "fort"}]
+   * [{lon: 123, lat: 123, radius: 44, owner: "123abc", type: "fort", troops: 12}]
    */
   regions: {
     type: [{type: Schema.Types.Mixed}],
     default: [],
+  },
+
+  /**
+   * keys are a userId that's in the game, and the value is the amount of
+   * troops that user has accompanying him in game
+   */
+  troops: {
+    type: Schema.Types.Mixed,
+    default: {},
   },
 
   /**
