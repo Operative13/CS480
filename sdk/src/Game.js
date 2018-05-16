@@ -246,6 +246,50 @@ module.exports = class Game {
   }
 
   /**
+   * Transfer troops to a base of a user. He must be inside the
+   * region of the capture zone/base and he must be the owner of it.
+   * Note: positive integer for troops for putting troops in base, negative
+   * integer for taking troops from base
+   * @param userId
+   * @param regionIndex
+   * @param troops
+   * @param gameId
+   * @returns {Promise}
+   */
+  transferTroopsToBase(userId, regionIndex, troops, gameId=null) {
+    let reqBody = {
+      userId,
+      regionIndex,
+      troops,
+    };
+
+    return new Promise((resolve, reject) => {
+      fetch(
+        `${this._url}/${gameId || this.id}/troops`,
+        {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(reqBody),
+        })
+        .then((response) => {
+          response.json()
+            .then((json) => {
+              if (!response.ok) reject(getErrorFromFailOrError(json));
+
+              let data = getDataFromSuccess(json);
+              this._updateGame(data);
+              resolve(data);
+            })
+            .catch(err => reject(err))
+        })
+        .catch(err => reject(err))
+    });
+  }
+
+  /**
    * Creates a websocket to call the given callback when a message is sent
    * from the server. The json from the response will be passed to the callback
    * (without jsend std).

@@ -247,6 +247,40 @@ describe('wait 5.1 seconds and check john\'s score', () => {
   });
 });
 
+describe('check the troops in the region john captured', () => {
+  it('should be 2 (1 init, + 1 after 1 game loop on server', () => {
+    return game.getGame()
+      .then(json => {
+        assert(json.regions[0].troops === 2);
+      })
+      .catch(err => err)
+  });
+});
+
+describe('transfer 2 troops from john to his base he captured', () => {
+  it('should decrement john\'s troops by 2 and increase his base\'s troops by 2', () => {
+    return game.transferTroopsToBase(userJohn.id, 0, 2)
+      .then(json => {
+        console.log(json);
+        assert(json.regions[0].troops === 4);
+        assert(json.troops[userId] === 3);
+      })
+      .catch(err => err)
+  })
+});
+
+describe('transfer 4 troops from john\'s base to john', () => {
+  it('should decrease the troops in his base by 4 and increase his troops by 4', () => {
+    return game.transferTroopsToBase(userJohn.id, 0, -4)
+      .then(json => {
+        console.log(json);
+        assert(json.regions[0].troops === 0);
+        assert(json.troops[userId] === 7);
+      })
+      .catch(err => err)
+  });
+});
+
 describe('Game#leave: have each user leave the game', () => {
   it('should remove james & john from the game then delete the empty game', () => {
     return game.leave(userJames.id)

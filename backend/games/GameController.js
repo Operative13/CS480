@@ -128,7 +128,11 @@ router.post('/join', (req, res) => {
         return requestError(res, new Error(msg));
       }
 
-      let userInfo = {userId: req.body.myUserId, lat: 0, lon: 0};
+      let userInfo = {
+        userId: req.body.myUserId,
+        lat: 0,
+        lon: 0,
+      };
 
       // games room name to join was provided by requester
       if (req.body.gameName) {
@@ -286,5 +290,9 @@ router.ws('/:id/regions', function(ws, req) {
     ws.send(JSON.stringify(regions));
   });
 });
+
+// route.ws('/:id/troops', function(ws, req) {
+//
+// });
 
 module.exports = router;

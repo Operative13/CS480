@@ -116,6 +116,7 @@ function addUser(game, userInfo) {
         // or of type Object in schema
         game.markModified('geolocations');
         game.markModified('scores');
+        game.markModified('troops');
         game.save()
           .then((savedGame) => resolve(savedGame))
           .catch(err => reject(err))
