@@ -10,7 +10,7 @@ module.exports = class Game {
   /**
    * @param baseConnection {BaseConnection} - object contains properties for
    *  domain, port, and baseUrl that help determine URIs to connect & query
-   * @param WebSocketClass {class|function} defaults to importing ws lib
+   * @param WebSocketClass {class|function}
    *  If a react native app uses this class, pass WebSocket, a built-in class
    */
   constructor(baseConnection, WebSocketClass) {
@@ -76,7 +76,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) return reject(getErrorFromFailOrError(json));
+              if (!response.ok) reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);
@@ -118,7 +118,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) return reject(getErrorFromFailOrError(json));
+              if (!response.ok) reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);
@@ -160,7 +160,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) return reject(getErrorFromFailOrError(json));
+              if (!response.ok) reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);
@@ -197,7 +197,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) return reject(getErrorFromFailOrError(json));
+              if (!response.ok) reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);
@@ -233,7 +233,7 @@ module.exports = class Game {
         .then((response) => {
           response.json()
             .then((json) => {
-              if (!response.ok) return reject(getErrorFromFailOrError(json));
+              if (!response.ok) reject(getErrorFromFailOrError(json));
 
               let data = getDataFromSuccess(json);
               this._updateGame(data);

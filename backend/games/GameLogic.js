@@ -341,7 +341,10 @@ async function updateScore(game, region) {
 }
 
 function updateTroops(game, region) {
-  region.troops += GameConfig.troopsPerCaptureZone;
+  // if there's an owner
+  if (region.owner) {
+    region.troops += GameConfig.troopsPerCaptureZone;
+  }
 }
 
 function startGameTimer(gameId) {
@@ -392,6 +395,45 @@ function endGame(gameId) {
   });
 }
 
+/**
+ * Transfer troops between a user and his base. He must be owner and in range.
+ * Negative number of troops to transfer the other way.
+ * @param game {mongoose.Document}
+ * @param userId {String}
+ * @param regionIndex {Number}
+ * @param troops {Number}
+ * @returns {Promise} resolves with saved game doc or rejects with error
+ *  if error occurs
+ */
+function transferTroopsToBase(game, userId, regionIndex, troops) {
+  return new Promise(async (resolve, reject) => {
+    let region = game.regions[regionIndex];
+    // check if userId is owner
+    if (region.owner !== userId) {
+      reject(`${userId} does not own this region, & may not transfer troops`);
+    }
+
+    // check if user is in range of region
+    let geolocation = game.geolocations[userId];
+    if (measure(geolocation.lat, geolocation.lon, region.lat, region.lon) > region.radius) {
+      reject(`${userId} is not in range of the region to transfer troops`);
+    }
+
+    // add troops to base
+    region.troops += troops;
+
+    // add troops * -1 to user's troops
+    game.troops[userId] += troops * -1;
+
+    // return promise from game save
+    game.markModified('regions');
+    game.markModified('troops');
+    await game.save()
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
 module.exports = {
   fiftyMetersInDeltaLatitude,
   fiftyMetersInDeltaLongitude,
@@ -400,4 +442,5 @@ module.exports = {
   updateRegions,
   regionChangeEvent,
   startGame,
+  transferTroopsToBase,
 };

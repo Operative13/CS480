@@ -225,7 +225,7 @@ router.get('/:id', function(req, res) {
 });
 
 /**
- * Update games info
+ * Update lat and lon for a given user in a game
  * Needs: myUserId, lat, lon
  * in request body
  */
@@ -254,6 +254,31 @@ router.post('/:id', function(req, res) {
       return requestError(res, error);
     }
   });
+});
+
+/**
+ * Transfer troops to a base of a user. He must be inside the
+ * region of the capture zone/base and he must be the owner of it.
+ * Note: positive integer for troops for putting troops in base, negative
+ * integer for taking troops from base
+ * Request body:
+ * userId, troops, regionIndex
+ */
+router.post('/:id/troops', function(req, res) {
+  // containment validation
+  if (!('userId' in req.body && 'troops' in req.body && 'regionIndex' in req.body)) {
+    return requestError(res, 'a property was missing in the request body');
+  }
+
+  Game.findOne({_id: ObjectId(req.params.id)}, function(err, game) {
+    if (err) return requestError(res, err);
+    if (!game) return requestError(res, `no such game with _id = ${req.params.id}`);
+    GameLogic.transferTroopsToBase(
+      game, req.body.userId, req.body.regionIndex, req.body.troops)
+      .then(savedGame => success(res, savedGame))
+      .catch(err => requestError(res, err))
+  });
+
 });
 
 router.ws('/:id/regions', function(ws, req) {
