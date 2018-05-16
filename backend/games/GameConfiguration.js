@@ -34,7 +34,7 @@ const config = {
   /**
    * The initial amount of troops given to the player when he joins the game
    */
-  initialTroopsForPlayer: 10,
+  initialTroopsForPlayer: 5,
 
   /**
    * The initial amount of troops spawned when a capture zone is first captured

@@ -318,7 +318,7 @@ function gameLoop(gameId) {
 async function regionsLoop(game) {
   // iterate over every region for this game
   for (let region of game['regions']) {
-    updateScore(game, region);
+    await updateScore(game, region).catch(err => err);
     updateTroops(game, region);
   }
 }
@@ -335,7 +335,7 @@ async function updateScore(game, region) {
       // save doc and resolve this function
       return await game.save()
         .then(game => resolve(`${game.winner} won ${gameId}`))
-        .catch(reject);
+        .catch(err => err);
     }
   }
 }

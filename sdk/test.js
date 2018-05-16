@@ -266,41 +266,6 @@ describe('Game#leave: have each user leave the game', () => {
   });
 });
 
-describe('add john to the 2nd game, ' +
-  'move him to capture zone', () => {
-  it('should end the game as time runs out with john declared as winner', async function() {
-    this.timeout(23000);  // 23 seconds
-
-    return game2.create('game2', userJohn.id, 1, 1,)
-      .then(json => {
-        let lat = json.regions[0].lat;
-        let lon = json.regions[0].lon;
-
-        // move john to the capture region
-        return game2.setGeolocation(userJohn.id, lon, lat)
-          .then(async (json) => {
-            await wait(6);
-
-            // move john out of the capture region
-            return game2.setGeolocation(userJohn.id, lon, lat)
-              .then(async (json) => {
-                await wait(15);
-
-                return game2.getGame()
-                  .then(json => {
-                    console.log(json);
-                    assert(json.winner === userJohn.id, 'john is the winner');
-                  })
-                  .catch(err => err)
-              })
-              .catch(err => err);
-          })
-          .catch(err => err)
-      })
-    .catch(err => err)
-  });
-});
-
 describe('check the number of troops in the region john captured', () => {
   it('should be 5 (1 for init capture, 4 for 4 game loops that occurred', () => {
     return game2.getGame()
@@ -338,14 +303,49 @@ describe('add john to the 3rd game, ' +
   });
 });
 
+describe('add john to the 2nd game, ' +
+  'move him to capture zone', () => {
+  it('should end the game as time runs out with john declared as winner', async function() {
+    this.timeout(23000);  // 23 seconds
+
+    return game2.create('game2', userJohn.id, 1, 1,)
+      .then(json => {
+        let lat = json.regions[0].lat;
+        let lon = json.regions[0].lon;
+
+        // move john to the capture region
+        return game2.setGeolocation(userJohn.id, lon, lat)
+          .then(async (json) => {
+            await wait(6);
+
+            // move john out of the capture region
+            return game2.setGeolocation(userJohn.id, lon, lat)
+              .then(async (json) => {
+                await wait(15);
+
+                return game2.getGame()
+                  .then(json => {
+                    console.log(json);
+                    assert(json.winner === userJohn.id, 'john is the winner');
+                  })
+                  .catch(err => err)
+              })
+              .catch(err => err);
+          })
+          .catch(err => err)
+      })
+    .catch(err => err)
+  });
+});
+
 /**
  * Restore initial renaming of files
  */
 after(function() {
   let configDir = '../backend/games';
-  call(`mv ${configDir}/GameConfiguration1.js ${configDir}/GameConfiguration.js`)
+  call(`mv ${configDir}/GameConfiguration.js ${configDir}/GameConfiguration2.js`)
     .then(() => {
-      call(`mv ${configDir}/GameConfiguration.js ${configDir}/GameConfiguration2.js`)
+      call(`mv ${configDir}/GameConfiguration1.js ${configDir}/GameConfiguration.js`)
         .catch(console.error);
     })
     .catch(console.error);

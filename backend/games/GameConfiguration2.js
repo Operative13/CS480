@@ -24,7 +24,7 @@ const config = {
   /**
    * Once a user in a game obtains this many points, he wins the game
    */
-  pointsNeededToWin: 2,
+  pointsNeededToWin: 1,
 
   /**
    * The amount of troops generated and placed inside a capture zone every tick
@@ -34,7 +34,7 @@ const config = {
   /**
    * The initial amount of troops given to the player when he joins the game
    */
-  initialTroopsForPlayer: 10,
+  initialTroopsForPlayer: 5,
 
   /**
    * The initial amount of troops spawned when a capture zone is first captured
@@ -49,7 +49,4 @@ const config = {
   gameDuration: 21,
 };
 
-/**
- * Values changed to represent a shorter game session for usage in testing
- */
 module.exports = config;
