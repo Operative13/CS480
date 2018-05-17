@@ -274,6 +274,20 @@ describe('transfer 4 troops from john\'s base to john', () => {
   });
 });
 
+describe('transfer 900 troops to john\'s from his base', () => {
+  it('should decrease the troops in his base by all available and increase his ' +
+    'troops by same amount', () => {
+
+    return game.transferTroopsToBase(userJohn.id, 0, 900)
+      .then(json => {
+        console.log(json);
+        assert(json.regions[0].troops === 7);
+        assert(json.troops[userId] === 0);
+      })
+      .catch(err => err)
+  });
+});
+
 describe('Game#leave: have each user leave the game', () => {
   it('should remove james & john from the game then delete the empty game', () => {
     return game.leave(userJames.id)

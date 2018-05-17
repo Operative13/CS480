@@ -402,6 +402,8 @@ function endGame(gameId) {
 /**
  * Transfer troops between a user and his base. He must be owner and in range.
  * Negative number of troops to transfer the other way.
+ * If more troops transferred from a source than available, then transfer as
+ * many as possible and continue normal execution.
  * @param game {mongoose.Document}
  * @param userId {String}
  * @param regionIndex {Number}
@@ -423,11 +425,25 @@ function transferTroopsToBase(game, userId, regionIndex, troops) {
       reject(`${userId} is not in range of the region to transfer troops`);
     }
 
+    let troopsOnPerson = game.troops[userId] - troops;
+    let troopsInBase = region.troops + troops;
+
+    // tried to transfer more than what the user has to base
+    if (troopsOnPerson < 0) {
+      troopsOnPerson = 0;
+      troopsInBase = region.troops + game.troops[userId];
+    }
+    // tried to transfer more than what the base has to user
+    else if (troopsInBase < 0) {
+      troopsInBase = 0;
+      troopsOnPerson = region.troops + game.troops[userId];
+    }
+
     // add troops to base
-    region.troops += troops;
+    region.troops = troopsInBase;
 
     // add troops * -1 to user's troops
-    game.troops[userId] += troops * -1;
+    game.troops[userId] = troopsOnPerson;
 
     // return promise from game save
     game.markModified('regions');

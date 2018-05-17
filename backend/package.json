@@ -19,7 +19,6 @@
     "express-ws": "^3.0.0",
     "jsend": "^1.0.2",
     "mongoose": "^5.0.1",
-    "mongorito": "^3.0.4",
     "winston": "^2.4.2",
     "winston-daily-rotate-file": "^3.1.3"
   },
