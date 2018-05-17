@@ -307,6 +307,10 @@ function gameLoop(gameId) {
         game.markModified('scores');
         game.markModified('regions');
         await game.save().catch(err => console.error(err));
+
+        // assuming at least one zone is owned and consequently, need to tell
+        // players that the troops for this zone(s) has increased
+        regionChangeEvent.emit(game._id, {regions: game.regions});
       });
 
       // wait some time

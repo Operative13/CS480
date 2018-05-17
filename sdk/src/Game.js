@@ -327,7 +327,7 @@ module.exports = class Game {
       onClose(event);
     }
   };
-  
+
   /**
    * Takes puts the attributes associated with the game doc for
    * this game instance and puts them in an object
