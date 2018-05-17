@@ -27,19 +27,6 @@ const call = require('./shell');
 // const GameConfig = require('../backend/games/GameConfiguration');
 
 /**
- * Load test game configuration settings by moving (renaming) files
- */
-before(function() {
-  let testConfigDirectory = '../backend/games';
-  call(`mv ${testConfigDirectory}/GameConfiguration.js ${testConfigDirectory}/GameConfiguration1.js`)
-    .then(() => {
-      call(`mv ${testConfigDirectory}/GameConfiguration2.js ${testConfigDirectory}/GameConfiguration.js`)
-        .catch(console.error);
-    })
-    .catch(console.error);
-});
-
-/**
  * Connect to the proper mongoDB URI
  */
 before(function() {
@@ -181,16 +168,22 @@ describe('Game#create: create a new game', () => {
 describe('Game#listenForRegionChange: adds a callback to call when region info changed', () => {
   it('should call the callback before all the test cases finish', () => {
     let callback = (json) => {
-      json.forEach((regionInfo) => {
+      // console.log('callback for regionChange', json);
+      let regions = json.regions;
+      regions.forEach((regionInfo) => {
         assert(regionInfo.hasOwnProperty('lat'));
         assert(regionInfo.hasOwnProperty('lon'));
         assert(regionInfo.hasOwnProperty('owner'));
         assert(regionInfo.hasOwnProperty('type'));
         assert(regionInfo.hasOwnProperty('radius'));
       });
+
+      if (json.troops) {
+        assert(userJames.id in json.troops);
+      }
     };
 
-    game.listenForRegionChange(callback);
+    return game.listenForRegionChange(callback);
   });
 });
 
@@ -370,19 +363,6 @@ describe('add john to the 2nd game, ' +
       })
     .catch(err => err)
   });
-});
-
-/**
- * Restore initial renaming of files
- */
-after(function() {
-  let configDir = '../backend/games';
-  call(`mv ${configDir}/GameConfiguration.js ${configDir}/GameConfiguration2.js`)
-    .then(() => {
-      call(`mv ${configDir}/GameConfiguration1.js ${configDir}/GameConfiguration.js`)
-        .catch(console.error);
-    })
-    .catch(console.error);
 });
 
 // region: helper functions //

@@ -285,14 +285,14 @@ router.post('/:id/troops', function(req, res) {
 
 });
 
+/**
+ * Change in region owner or change in troops in a base or troops on a user
+ * will cause this to send a message to listening clients
+ */
 router.ws('/:id/regions', function(ws, req) {
   GameLogic.regionChangeEvent.on(String(req.params.id), function(regions) {
     ws.send(JSON.stringify(regions));
   });
 });
-
-// route.ws('/:id/troops', function(ws, req) {
-//
-// });
 
 module.exports = router;

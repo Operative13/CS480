@@ -235,7 +235,7 @@ function updateRegions(game) {
 
   if (aRegionWasChanged) {
     // emit an internal event that'll in turn send a message using a websocket
-    regionChangeEvent.emit(String(game._id), updatedRegions);
+    regionChangeEvent.emit(String(game._id), {regions: updatedRegions});
 
     game['regions'] = updatedRegions;
     game.markModified('regions');
@@ -429,7 +429,16 @@ function transferTroopsToBase(game, userId, regionIndex, troops) {
     game.markModified('regions');
     game.markModified('troops');
     await game.save()
-      .then(resolve)
+      .then(savedGame => {
+        regionChangeEvent.emit(
+          game._id,
+          {
+            regions: savedGame.regions,
+            troops: savedGame.troops,
+          }
+        );
+        resolve(savedGame);
+      })
       .catch(reject);
   });
 }
