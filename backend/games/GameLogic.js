@@ -215,15 +215,30 @@ function updateRegions(game) {
 
       // this user is within the capture zone
       if (distance < region['radius']) {
-        // another user is within the same capture zone
-        if (newOwner) {
-          newOwner = region['owner'];
+        // owner is null (neutral region)
+        if (!region.owner) {
+          region.owner = userId;
         }
-        // this is the 1st user detected in the zone & maybe the only user
-        else {
-          newOwner = userId;
+        // this region is owned by enemy
+        else if (region.owner !== userId) {
+          // begin capture sequence
         }
-      }
+        //
+        // there is no owner, region is neutral
+      //   if (!newOwner) {
+      //     // give this owner the ownership of this region
+      //     newOwner = userId;
+      //   }
+      //   // another user is within the same capture zone
+      //   else if (newOwner) {
+      //     // keeps the owner the same
+      //     newOwner = region['owner'];
+      //   }
+      //   // this is the 1st user detected in the zone & maybe the only user
+      //   else {
+      //     newOwner = userId;
+      //   }
+      // }
     } // end users loop
 
     if (newOwner) {
@@ -248,6 +263,11 @@ function updateRegions(game) {
   } else {
     return new Promise(resolve => resolve(game));
   }
+}
+
+function beginZoneCapture(game, userId) {
+  // check if user is in range of zone
+  // no more defending troops
 }
 
 /**
