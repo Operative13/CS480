@@ -293,7 +293,11 @@ router.post('/:id/troops', function(req, res) {
  */
 router.ws('/:id/regions', function(ws, req) {
   GameLogic.regionChangeEvent.on(String(req.params.id), function(regions) {
-    ws.send(JSON.stringify(regions));
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(regions));
+    } else {
+      console.warn('WebSocket: not opened', ws.toString());
+    }
   });
 });
 
