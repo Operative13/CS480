@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 const ObjectId = require('mongoose').Types.ObjectId;
+const WebSocket = require('ws');
 
 // local imports
 const GameConfig = require('./GameConfiguration');
