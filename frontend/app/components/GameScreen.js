@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, AsyncStorage,} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, AsyncStorage, Modal, KeyboardAvoidingView, TextInput} from 'react-native';
 import { StackNavigator } from 'react-navigation'; // Version can be specified in package.json
 import MapView from 'react-native-maps';
 import {Marker, Circle} from 'react-native-maps';
@@ -22,12 +22,7 @@ export default class GameScreen extends React.Component {
     constructor(props){
         super(props);
         this.state = {
-            region: {
-                latitude: 34.0576,
-                longitude: -117.8207,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-            },
+            region: null,
             playerMarkers:[
                 {
                     coordinate: {
@@ -59,6 +54,9 @@ export default class GameScreen extends React.Component {
             enemyScore: 0,
             timeLeft: 10,
             userTroops: 0,
+            troopModalVisible: false,
+            workingRegionIndex: null,
+            troopTransferNumber: null,
         };
         //initial game id
         const {params} = this.props.navigation.state;
@@ -72,7 +70,6 @@ export default class GameScreen extends React.Component {
                 latitudeDelta: 0.01,
                 longitudeDelta: 0.01,
             };
-            this.state.regionSet = true;
         }
 
 
@@ -152,14 +149,13 @@ export default class GameScreen extends React.Component {
         try {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    if (!this.state.regionSet) {
+                    if (this.state.region === null) {
                         let region = {
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
                             latitudeDelta: 0.01,
                             longitudeDelta: 0.01
                         };
-                        this.setState({region, regionSet: true})
                     }
 
                     //update geolocation on server
@@ -363,15 +359,76 @@ export default class GameScreen extends React.Component {
     }
 
     render(){
-        if(this.state.regionSet && this.state.initialStateSet && this.state.initialGetGame) {
+        if(this.state.region !== null && this.state.initialStateSet && this.state.initialGetGame) {
             return (
                 <View style={styles.wrapper}>
-                    <View style={styles.container}>
+                    < View style={styles.container}>
+
+
+                            <Modal
+                                animationType ="slide"
+                                transparent={false}
+                                visible={this.state.troopModalVisible}
+                                onRequestClose={()=> {
+                                    console.log("troop menu closed");
+                                    this.setState({troopTransferNumber: null, workingRegionIndex: null})
+                                }}
+                            >
+
+                                <View style={troopModalStyles.modal}>
+                                    <Text style={troopModalStyles.title}>
+                                        Troop Menu
+                                    </Text>
+                                    <TextInput
+                                        keyboardType='numeric'
+                                        style={troopModalStyles.textInput} placeholder='0'
+                                        onChangeText={ (troopTransferNumber) => this.setState({troopTransferNumber})}
+                                        underlineColorAndroid='transparent'
+                                    />
+
+                                    <Text style={troopModalStyles.title}>
+                                        Troops With You: {this.state.userTroops}
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={troopModalStyles.btn}
+                                        onPress={()=> {
+                                            this.transferTroops(this.state.troopTransferNumber);
+                                            this.toggleModal();
+                                        }}
+                                    >
+                                        <Text>Send Troops</Text>
+                                    </TouchableOpacity>
+
+                                    <Text style={troopModalStyles.title}>
+                                        Troops Available in Fort: {this.game.regions[Number(this.state.workingRegionIndex)].troops}
+                                    </Text>
+
+                                    <TouchableOpacity
+                                        style={troopModalStyles.btn}
+                                        onPress={()=> {
+                                            this.transferTroops(-this.state.troopTransferNumber);
+                                            this.toggleModal();
+                                        }}
+                                    >
+                                        <Text>Receive Troops</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={troopModalStyles.btn}
+                                        onPress={() => this.toggleModal()}
+                                    >
+                                        <Text>Exit Menu</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </Modal>
+
+
                         <MapView style={styles.map}
                                  initialRegion={this.state.region}
                                  onRegionChangeComplete={(region) => this.onRegionChange(region)}
                                  key={"gs-map-view"}
                                  showsCompass={false}
+                                 toolbarEnabled={false}
                         >
                             {this.state.playerMarkers.map(marker => (
                                 <Marker
@@ -445,15 +502,51 @@ export default class GameScreen extends React.Component {
         this.setState({ region });
     }
 
+    toggleModal(){
+        this.setState({troopModalVisible: !this.state.troopModalVisible});
+    }
+
     onBuildingPress(regionIndex){
-        console.log("on press works, region index: " + regionIndex);
+        //console.log("on press works, region index: " + regionIndex);
 
         //if user is inside of the fort that was on pressed
         //then open the drawer
         if(this.measureDist(this.game.regions[regionIndex].lat, this.game.regions[regionIndex].lon,
-            this.state.playerMarkers[0].coordinate.latitude, this.state.playerMarkers[0].coordinate.longitude) < this.game.regions[regionIndex].radius){
+            this.state.playerMarkers[0].coordinate.latitude, this.state.playerMarkers[0].coordinate.longitude) < this.game.regions[regionIndex].radius
+            && this.game.regions[regionIndex].owner === this.state.userID){
             //open drawer
-            console.log("menu opened");
+            this.setState({workingRegionIndex: regionIndex});
+            this.toggleModal();
+        }
+    }
+
+    transferTroops(troopNumber){
+
+        if(this.measureDist(this.game.regions[Number(this.state.workingRegionIndex)].lat, this.game.regions[Number(this.state.workingRegionIndex)].lon,
+            this.state.playerMarkers[0].coordinate.latitude, this.state.playerMarkers[0].coordinate.longitude) < this.game.regions[Number(this.state.workingRegionIndex)].radius
+            && this.game.regions[Number(this.state.workingRegionIndex)].owner === this.state.userID){
+
+            console.log("Had this number of troops when attempting to transfer: " + this.state.userTroops);
+            if(troopNumber > 0){
+                console.log("Attempted to send to base: " + troopNumber);
+            }else{
+                console.log("Attempted to receive from base: " + troopNumber);
+            }
+            let prev = Number(this.game.regions[Number(this.state.workingRegionIndex)].troops);
+
+            this.game.transferTroopsToBase(this.state.userID, this.state.workingRegionIndex, troopNumber, this.state.gameID)
+                .then(response => {
+                    console.log("Base now has: " + response.regions[Number(this.state.workingRegionIndex)].troops);
+                    let change = Number(response.regions[Number(this.state.workingRegionIndex)].troops) - prev;
+                    console.log("This means the change was" + change )
+                })
+                .catch(error => {
+                    console.log("transferTroops error: " + error);
+                    alert("Transfer Troops Failed");
+                })
+        }
+        else {
+            alert("Transfer Troops Failed");
         }
     }
 
@@ -540,5 +633,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 10,
         marginTop: 0,
+    },
+});
+
+const troopModalStyles = StyleSheet.create({
+    modal: {
+        flex: 1,
+        alignItems: 'center',
+        backgroundColor: '#000000',
+        padding: 50
+    },
+    btn: {
+        alignSelf: 'stretch',
+        backgroundColor: '#FAB913',
+        padding: 5,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    title: {
+        color: '#ffffff',
+        marginTop: 10,
+    },
+    textInput: {
+        alignSelf: 'stretch',
+        padding: 16,
+        marginBottom: 20,
+        backgroundColor: '#fff',
     },
 });
