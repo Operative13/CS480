@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 const ObjectId = require('mongoose').Types.ObjectId;
+const WebSocket = require('ws');
 
 // local imports
 const GameConfig = require('./GameConfiguration');
@@ -296,7 +297,7 @@ router.ws('/:id/regions', function(ws, req) {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(regions));
     } else {
-      console.warn('WebSocket: not opened', ws.toString());
+      console.log('WebSocket: not opened', ws.toString());
     }
   });
 });

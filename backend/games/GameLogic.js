@@ -338,7 +338,7 @@ function gameLoop(gameId) {
 
         // assuming at least one zone is owned and consequently, need to tell
         // players that the troops for this zone(s) has increased
-        regionChangeEvent.emit(game._id, {regions: game.regions});
+        regionChangeEvent.emit(String(game._id), {regions: game.regions});
       });
 
       // wait some time
@@ -441,6 +441,19 @@ function endGame(gameId) {
  */
 function transferTroopsToBase(game, userId, regionIndex, troops) {
   return new Promise(async (resolve, reject) => {
+    // input validation
+    try {
+      troops = Math.trunc(Number(troops));
+      regionIndex = Math.trunc(Number(regionIndex));
+    } catch (err) {
+      return reject(err)
+    }
+
+    if (Number.isNaN(troops) || Number.isNaN(regionIndex)) {
+      return reject(`${troops} or ${regionIndex} is invalid number (converted 
+        to Number then truncated`);
+    }
+
     let region = game.regions[regionIndex];
     // check if userId is owner
     if (region.owner !== userId) {
@@ -479,7 +492,7 @@ function transferTroopsToBase(game, userId, regionIndex, troops) {
     await game.save()
       .then(savedGame => {
         regionChangeEvent.emit(
-          game._id,
+          String(game._id),
           {
             regions: savedGame.regions,
             troops: savedGame.troops,
