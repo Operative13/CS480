@@ -385,7 +385,7 @@ function startGameTimer(gameId) {
   return new Promise((resolve, reject) => {
     Game.findOne({_id: ObjectId(gameId)}, (err, game) => {
       if (err || !game) {
-        reject(err || `startGameTimer: no such game, _id = ${gameId}`);
+        return reject(err || `startGameTimer: no such game, _id = ${gameId}`);
       }
 
       game.startTime = new Date();
