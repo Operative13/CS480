@@ -302,7 +302,7 @@ function regionCaptureTick(game, region, userId) {
  */
 function startGame(gameId) {
   // GameConfig = require('./GameConfiguration');
-  startGameTimer(gameId);
+  startGameTimer(gameId).catch(console.warn);
   return gameLoop(gameId);
 }
 
