@@ -191,83 +191,107 @@ function createEvenlyDistributedRegions(
 
 /**
  * Checks the users geolocations and updates the owner of each region
- * if there's a user in that capture region. If two users stand in the same
- * region, then the owner does not change.
+ * if there's a user in that capture region. Calls a async func that begins
+ * the process of one user taking ownership of a zone if he is in the zone
+ * of an enemy (startZoneCapture).
  * @param game {mongoose.Document} - the game that holds info on users and
  *  regions for the game instance
  * @returns {Promise<mongoose.Document>} when the document is finished being
  *  modified and saved in MongoDB, return it in the resolution
  */
 function updateRegions(game) {
-  let updatedRegions = [];
-  let aRegionWasChanged = false;
-
   // check each region
   for (let region of game['regions']) {
-    let newOwner = '';
-
     for (let userId in game['geolocations']) {
-      let geolocation = game['geolocations'][userId];
-
-      // dist in meters between user location & capture zone center position
-      let distance = measure(geolocation['lat'], geolocation['lon'],
-        region['lat'], region['lon']);
-
-      // this user is within the capture zone
-      if (distance < region['radius']) {
-        // owner is null (neutral region)
-        if (!region.owner) {
-          region.owner = userId;
-        }
-        // this region is owned by enemy
-        else if (region.owner !== userId) {
+        // this region is owned by an enemy
+        if (region.owner !== userId) {
           // begin capture sequence
+          startZoneCapture(game, region, userId).catch(console.error);
         }
-        //
-        // there is no owner, region is neutral
-      //   if (!newOwner) {
-      //     // give this owner the ownership of this region
-      //     newOwner = userId;
-      //   }
-      //   // another user is within the same capture zone
-      //   else if (newOwner) {
-      //     // keeps the owner the same
-      //     newOwner = region['owner'];
-      //   }
-      //   // this is the 1st user detected in the zone & maybe the only user
-      //   else {
-      //     newOwner = userId;
-      //   }
-      // }
     } // end users loop
-
-    if (newOwner) {
-      region['owner'] = newOwner;
-      aRegionWasChanged = true;
-    }
-    updatedRegions.push(region);
   } // end regions loop
+}
 
-  if (aRegionWasChanged) {
-    // emit an internal event that'll in turn send a message using a websocket
-    regionChangeEvent.emit(String(game._id), {regions: updatedRegions});
+function userInRangeOfZone(game, region, userId) {
+  let geolocation = game['geolocations'][userId];
 
-    game['regions'] = updatedRegions;
-    game.markModified('regions');
+  // dist in meters between user location & capture zone center position
+  let distance = measure(geolocation['lat'], geolocation['lon'],
+    region['lat'], region['lon']);
 
-    return new Promise((resolve, reject) => {
-      game.save()
-        .then(game => resolve(game))
-        .catch(err => reject(err))
-    })
-  } else {
-    return new Promise(resolve => resolve(game));
+  return distance < region.radius;
+}
+
+function userOwnsZone(region, userId) {
+  return region.owner === userId;
+}
+
+/**
+ * As long as a user stays in range of the zone and doesn't have ownership
+ * over it, use troops on owner to attack and make way towards taking ownership
+ * over it. Indefinitely continuous as long as conditions met (don't
+ * await this).
+ * @param game
+ * @param region
+ * @param userId
+ * @returns {Promise<void>}
+ */
+async function startZoneCapture(game, region, userId) {
+  // while user in range and doesn't own the zone
+  while (userInRangeOfZone(game, region, userId) && !userOwnsZone(region, userId)) {
+    regionCaptureTick(game, region, userId);
+    await wait(GameConfig.troopsAttackingLoopPeriod);
   }
 }
 
-function beginZoneCapture(game, userId) {
-  // check if user is in range of zone
-  // no more defending troops
+/**
+ * Actions to take when a user is attacking or trying to take ownership of
+ * an enemy base. Emits regionChangedEvent.
+ * @param game
+ * @param region
+ * @param userId
+ */
+function regionCaptureTick(game, region, userId) {
+  // owner is not null
+  if (region.owner) {
+    let troopsInFight = GameConfig.troopsAttackingPerCaptureLoop;
+    let troopsOnUser = game.troops[userId] - troopsInFight;
+
+    // user has depleted all of his troops in this last attack
+    if (troopsOnUser < 0) {
+      troopsOnUser = 0;
+      troopsInFight = game.troops[userId];
+    }
+
+    let troopsInBase = region.troops - troopsInFight;
+    // no more troops in base to defend
+    if (troopsInBase < 0) {
+      // give user back his troops that didn't fight
+      troopsOnUser += -troopsInBase;
+      troopsInBase = 0;
+      region.owner = userId;
+    }
+
+    region.troops = troopsInBase;
+    game.troops[userId] = troopsOnUser;
+  }
+  // region doesn't have any owner
+  else {
+    region.owner = userId;
+  }
+
+  game.markModified('troops');
+  game.markModified('regions');
+  game.save()
+    .then(savedGame => {
+      regionChangeEvent.emit(
+        String(savedGame._id),
+        {
+          regions: savedGame.regions,
+          troops: savedGame.troops,
+        });
+    })
+    .catch(console.error);
 }
 
 /**
@@ -289,20 +313,6 @@ function startGame(gameId) {
  * @returns {Promise} - resolves once the game has been deleted
  */
 function gameLoop(gameId) {
-  /**
-   * Wait some time.
-   * @param time {Number} - amount of time to wait in seconds
-   * @returns {Promise<void>}
-   */
-  function wait(time) {
-    return new Promise(resolve => {
-      setTimeout(
-        () => resolve(),
-        time * 1000,
-      );
-    })
-  }
-
   return new Promise(async (resolve, reject) => {
     let done = false;
 
@@ -481,6 +491,20 @@ function transferTroopsToBase(game, userId, regionIndex, troops) {
       })
       .catch(reject);
   });
+}
+
+/**
+ * Wait some time.
+ * @param time {Number} - amount of time to wait in seconds
+ * @returns {Promise<void>}
+ */
+function wait(time) {
+  return new Promise(resolve => {
+    setTimeout(
+      () => resolve(),
+      time * 1000,
+    );
+  })
 }
 
 module.exports = {
