@@ -441,6 +441,19 @@ function endGame(gameId) {
  */
 function transferTroopsToBase(game, userId, regionIndex, troops) {
   return new Promise(async (resolve, reject) => {
+    // input validation
+    try {
+      troops = Math.trunc(Number(troops));
+      regionIndex = Math.trunc(Number(regionIndex));
+    } catch (err) {
+      return reject(err)
+    }
+
+    if (Number.isNaN(troops) || Number.isNaN(regionIndex)) {
+      return reject(`${troops} or ${regionIndex} is invalid number (converted 
+        to Number then truncated`);
+    }
+
     let region = game.regions[regionIndex];
     // check if userId is owner
     if (region.owner !== userId) {
