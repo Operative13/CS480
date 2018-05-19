@@ -301,7 +301,6 @@ function regionCaptureTick(game, region, userId) {
  * @returns {Promise}
  */
 function startGame(gameId) {
-  // GameConfig = require('./GameConfiguration');
   startGameTimer(gameId).catch(console.warn);
   return gameLoop(gameId);
 }
@@ -317,13 +316,12 @@ function gameLoop(gameId) {
     let done = false;
 
     while (!done) {
-      console.log('loop');
       // find the game doc by it's _id
       Game.findOne({_id: ObjectId(gameId)}, async (err, game) => {
         if (err || !game) {
           done = true;
           return resolve(
-            `id = ${gameId} doesn't exists. It might've been deleted if all users left.`);
+            `game._id = ${gameId} doesn't exists. The game must be over.`);
         }
 
         // winner has been set, implies the game is over
