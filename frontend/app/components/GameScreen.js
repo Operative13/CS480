@@ -58,18 +58,23 @@ export default class GameScreen extends React.Component {
             score: 0,
             enemyScore: 0,
             timeLeft: 10,
+            userTroops: 0,
         };
         //initial game id
         const {params} = this.props.navigation.state;
         this.state.gameID = params.gameID;
 
         //initial region
-        this.state.region = {
-            latitude: params.lat,
-            longitude: params.lon,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.0011,
-        };
+        if(params.lat && params.lon){
+            this.state.region = {
+                latitude: params.lat,
+                longitude: params.lon,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            };
+            this.state.regionSet = true;
+        }
+
 
         let baseConn = new BaseConnection( IP ,'3000');
         this.game = new Game(baseConn, WebSocket);
@@ -126,7 +131,8 @@ export default class GameScreen extends React.Component {
 
         this.game.getGame(this.state.gameID)
             .then((response) => {
-                this.updateNodes(this.game.regions);
+                console.log(response);
+                this.updateNodes(response);
                 this.setState({timeLeft: this.calcTimeLeft(response.startTime)});
                 this.state.initialGetGame = true;
             })
@@ -151,7 +157,7 @@ export default class GameScreen extends React.Component {
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
                             latitudeDelta: 0.01,
-                            longitudeDelta: 0.0011
+                            longitudeDelta: 0.01
                         };
                         this.setState({region, regionSet: true})
                     }
@@ -198,6 +204,7 @@ export default class GameScreen extends React.Component {
      */
     updatePlayers = (position, response) => {
         try {
+            //update players
             if (!this.game.hasOwnProperty('geolocations') || !response) {
                 throw new Error(`invalid http response or Game object. game = \n${this.game.toString()}`);
             }
@@ -242,6 +249,12 @@ export default class GameScreen extends React.Component {
                     this.setState({score: response.scores[userId]})
                 }
             }
+            //update player troops
+            for (let userId in response.troops) {
+                if (userId !== 'null' && userId === this.state.userID ){
+                    this.setState({userTroops: response.troops[userId]})
+                }
+            }
         }
         catch (error){
             console.error(error)
@@ -252,62 +265,71 @@ export default class GameScreen extends React.Component {
      * ->update nodes with response from server
      * @param regions - regions from game document return from server, contains regions which have LatLang, radius, owner, and type
      */
-    updateNodes = (regions) => {
+    updateNodes = (response) => {
         let nodes=[];
+        let index = 0;
         //console.log("updateNodes: " + JSON.stringify(regions));
-        console.log(this.game.regions)
-        for(let item in regions){
+        //console.log(this.game.regions)
+        for(let item in response.regions){
             //console.log("node: " + JSON.stringify(item));
             let coord = {
-                latitude: regions[item].lat,
-                longitude: regions[item].lon,
+                latitude: response.regions[item].lat,
+                longitude: response.regions[item].lon,
             };
             let color;
-            if(regions[item].owner == null){
+            if(response.regions[item].owner == null){
                 color = '#FAF0E6';
             }
-            else if (regions[item].owner === this.state.userID){
+            else if (response.regions[item].owner === this.state.userID){
                 color = '#0000ff';
             }
             else {
                 color = '#ff0000';
             }
 
+            let troops;
+            troops = "Troop Garrison: " + response.regions[item].troops;
+
             let image;
             if(color === '#0000ff'){
-                if(regions[item].type == "fort"){
+                if(response.regions[item].type == "fort"){
                     image = blueFortImg;
                 }
-                else if (regions[item].type == "castle"){
+                else if (response.regions[item].type == "castle"){
                     image = blueCastleImg;
                 }
             }
             else if (color === '#ff0000'){
-                if (regions[item].type == "fort") {
+                if (response.regions[item].type == "fort") {
                     image = redFortImg;
                 }
-                else if (regions[item].type == "castle") {
+                else if (response.regions[item].type == "castle") {
                     image = redCastleImg;
                 }
             }
             else {
-                if (regions[item].type == "fort") {
+                if (response.regions[item].type == "fort") {
                     image = fortImg;
                 }
-                else if (regions[item].type == "castle") {
+                else if (response.regions[item].type == "castle") {
                     image = castleImg;
                 }
             }
 
             let node = {
+                key: index,
                 coordinate: coord,
                 color: color,
-                title: regions[item].type,
-                radius: regions[item].radius,
+                title: response.regions[item].type,
+                description: troops,
+                radius: response.regions[item].radius,
                 image: image,
             };
             nodes.push(node);
-        }
+            index++;
+
+        } // end for loop
+
         //console.log("nodes: " + JSON.stringify(nodes));
         this.setState({nodes: nodes});
     };
@@ -349,13 +371,17 @@ export default class GameScreen extends React.Component {
                             ))}
                             {this.state.nodes.map(marker => (
                                 <Marker
+                                    key={marker.key}
+                                    description={marker.description}
                                     coordinate={marker.coordinate}
                                     title={marker.title}
                                     image={marker.image}
+                                    onPress={()=> this.onBuildingPress(marker.key)}
                                 />
                             ))}
                             {this.state.nodes.map(marker => (
                                 <Circle
+                                    key={marker.key}
                                     center={marker.coordinate}
                                     radius={marker.radius}
                                     fillColor={marker.color}
@@ -371,6 +397,7 @@ export default class GameScreen extends React.Component {
                         </TouchableOpacity>
                         <View style = {styles.scoreDisplay}>
                             <Text >
+                                Troops: {this.state.userTroops} {"   |   "}
                                 Score: {this.state.score} {"   "}
                                 Enemy: {this.state.enemyScore}
                             </Text>
@@ -383,10 +410,9 @@ export default class GameScreen extends React.Component {
                             />
 
                         </View>
-
                     </View>
-
                 </View>
+
             );
         }
         else {
@@ -407,6 +433,18 @@ export default class GameScreen extends React.Component {
         this.setState({ region });
     }
 
+    onBuildingPress(regionIndex){
+        console.log("on press works, region index: " + regionIndex);
+
+        //if user is inside of the fort that was on pressed
+        //then open the drawer
+        if(this.measureDist(this.game.regions[regionIndex].lat, this.game.regions[regionIndex].lon,
+            this.state.playerMarkers[0].coordinate.latitude, this.state.playerMarkers[0].coordinate.longitude) < this.game.regions[regionIndex].radius){
+            //open drawer
+            console.log("menu opened");
+        }
+    }
+
     /**
      * -> function called when user presses the Quit game button
      */
@@ -415,7 +453,7 @@ export default class GameScreen extends React.Component {
         this.game.leave(this.state.userID, this.state.gameID);
         AsyncStorage.removeItem('gameID');
         this.props.navigation.pop(2);
-    }
+    };
 
     /**
      * -> function called when a winner has been set in the game document
@@ -428,6 +466,28 @@ export default class GameScreen extends React.Component {
         this.game.leave(this.state.userID, this.state.gameID);
         AsyncStorage.removeItem('gameID');
         this.props.navigation.navigate('GameOver', {isWinner: isWinner});
+    };
+
+    /**
+     * Measure the distance in meters between two points
+     * (in latitude and longitude)
+     * source of code: https://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
+     * @param lat1
+     * @param lon1
+     * @param lat2
+     * @param lon2
+     * @returns {number} distance in meters
+     */
+    measureDist(lat1, lon1, lat2, lon2){
+        let R = 6378.137; // Radius of earth in KM
+        let dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
+        let dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
+        let a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        let d = R * c;
+        return d * 1000; // meters
     }
 
 }
