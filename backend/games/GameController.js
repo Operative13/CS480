@@ -244,18 +244,20 @@ router.post('/:id', function(req, res) {
 
       game.geolocations[req.body.myUserId]['lat'] = req.body.lat;
       game.geolocations[req.body.myUserId]['lon'] = req.body.lon;
+      success(res, game);
 
       game.markModified('geolocations');
       game.save()
         .then(savedGame => {
           // update capture zones ownerships
-          GameLogic.updateRegions(savedGame)
-            .then(savedGame2 => success(res, savedGame2))
-            .catch(err => serverError(res, err))
+          GameLogic.updateRegions(savedGame);
+            // .catch(console.error)
         })
-        .catch(err => serverError(res, err))
+        .catch(console.error)
+        // .catch(err => serverError(res, err))
     } catch (error) {
-      return requestError(res, error);
+      // return requestError(res, error);
+      console.error(err);
     }
   });
 });

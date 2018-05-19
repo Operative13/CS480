@@ -211,17 +211,29 @@ describe('Game#join: have john join the game james is in', () => {
 });
 
 describe('john moves directly on top of a capture region', () => {
-  it('should change that region owner to john\'s id', function() {
+  it('should change that region owner to john\'s id', () => {
     let lat = game.regions[0].lat;
     let lon = game.regions[0].lon;
 
+    game.listenForRegionChange((data) => {
+      console.log('john mv', data);
+      assert(data.regions[0].owner === userJohn.id);
+      // game.listenForRegionChange(() => {});
+    });
+
     return game.setGeolocation(userJohn.id, lon, lat)
-      .then(json => {
-        assert(json.regions[0].owner === userJohn.id, 'john is owner');
+      .then(async (json) => {
+        console.log(json);
+        await wait(2); // give time for doc to update then check
+        // return game.getGeolocation()
+        //   .then(json => {
+        //     console.log(json);
+        //     assert(json.regions[0].owner === userJohn.id, 'john is owner');
+        //   })
+          .catch(err => err)
       })
       .catch(err => {
         throw new Error(err.message || err.data);
-        // done(new Error(err.message || err.data))
       });
   });
 });
@@ -254,7 +266,7 @@ describe('transfer 2 troops from john to his base he captured', () => {
   it('should decrement john\'s troops by 2 and increase his base\'s troops by 2', () => {
     return game.transferTroopsToBase(userJohn.id, 0, 2)
       .then(json => {
-        console.log(json);
+        // console.log(json);
         assert(json.regions[0].troops === 4);
         assert(json.troops[userId] === 3);
       })
@@ -266,7 +278,7 @@ describe('transfer 4 troops from john\'s base to john', () => {
   it('should decrease the troops in his base by 4 and increase his troops by 4', () => {
     return game.transferTroopsToBase(userJohn.id, 0, -4)
       .then(json => {
-        console.log(json);
+        // console.log(json);
         assert(json.regions[0].troops === 0);
         assert(json.troops[userId] === 7);
       })
@@ -280,7 +292,7 @@ describe('transfer 900 troops to john\'s from his base', () => {
 
     return game.transferTroopsToBase(userJohn.id, 0, 900)
       .then(json => {
-        console.log(json);
+        // console.log(json);
         assert(json.regions[0].troops === 7);
         assert(json.troops[userId] === 0);
       })

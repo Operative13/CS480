@@ -32,6 +32,16 @@ const config = {
   troopsPerCaptureZone: 1,
 
   /**
+   * The amount of troops that die trying to take over a base every tick/loop
+   */
+  troopsAttackingPerCaptureLoop: 1,
+
+  /**
+   * Time between troops fighting & dying for ownership of a base.
+   */
+  troopsAttackingLoopPeriod: 1,
+
+  /**
    * The initial amount of troops given to the player when he joins the game
    */
   initialTroopsForPlayer: 5,

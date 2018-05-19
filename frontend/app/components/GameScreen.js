@@ -168,7 +168,6 @@ export default class GameScreen extends React.Component {
                             //console.log(response);
                             this.setState({numErrors: 0});
                             this.checkWinner(response.winner);
-                            //this.updateNodes(response.regions);
                             this.updatePlayers(position, response);
                         })
                         .catch((err) => {
@@ -235,7 +234,8 @@ export default class GameScreen extends React.Component {
                     title: "Enemy",
                     pinColor: '#ff0000',
                 },
-            ]
+            ];
+
             this.setState({
                 playerMarkers: playerMarkers
             });
@@ -262,12 +262,24 @@ export default class GameScreen extends React.Component {
     };
 
     /**
-     * ->update nodes with response from server
-     * @param regions - regions from game document return from server, contains regions which have LatLang, radius, owner, and type
+     * update nodes with response from server
+     * @param data {object} - regions from game document return from server,
+     *  contains 1 or 2 properties: regions which have lat, lon, radius, owner,
+     *  type, and troops
+     *  2nd property, troops contains: a object with properties of userIds and
+     *  values of their troops like
+     *  e.g.:
+     *  data = {
+     *      regions: [{lat: 123, lon: 123, type: "castle",
+     *          troops: 1, owner: "579", radius: 7
+     *      }],
+     *      troops: {"579": 5, "401": 7}
+     *  }
      */
     updateNodes = (response) => {
         let nodes=[];
         let index = 0;
+
         //console.log("updateNodes: " + JSON.stringify(regions));
         //console.log(this.game.regions)
         for(let item in response.regions){
