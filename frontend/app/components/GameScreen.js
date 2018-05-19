@@ -369,10 +369,7 @@ export default class GameScreen extends React.Component {
                                 animationType ="slide"
                                 transparent={false}
                                 visible={this.state.troopModalVisible}
-                                onRequestClose={()=> {
-                                    console.log("troop menu closed");
-                                    this.setState({troopTransferNumber: null, workingRegionIndex: null})
-                                }}
+                                onRequestClose={()=>  console.log("troop menu closed")}
                             >
 
                                 <View style={troopModalStyles.modal}>
@@ -503,7 +500,7 @@ export default class GameScreen extends React.Component {
     }
 
     toggleModal(){
-        this.setState({troopModalVisible: !this.state.troopModalVisible});
+        this.setState({troopModalVisible: !this.state.troopModalVisible, troopTransferNumber: null, workingRegionIndex: null});
     }
 
     onBuildingPress(regionIndex){
