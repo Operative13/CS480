@@ -338,7 +338,7 @@ function gameLoop(gameId) {
 
         // assuming at least one zone is owned and consequently, need to tell
         // players that the troops for this zone(s) has increased
-        regionChangeEvent.emit(game._id, {regions: game.regions});
+        regionChangeEvent.emit(String(game._id), {regions: game.regions});
       });
 
       // wait some time
@@ -479,7 +479,7 @@ function transferTroopsToBase(game, userId, regionIndex, troops) {
     await game.save()
       .then(savedGame => {
         regionChangeEvent.emit(
-          game._id,
+          String(game._id),
           {
             regions: savedGame.regions,
             troops: savedGame.troops,
