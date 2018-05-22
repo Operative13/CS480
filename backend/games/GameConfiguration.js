@@ -25,7 +25,7 @@ const config = {
    * The distance between the host init coords and the center of each capture
    * zone.
    */
-  captureZoneDistance: 6,
+  captureZoneDistance: 18,
 
   /**
    * The amount of points awarded for each capture zone owned
