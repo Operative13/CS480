@@ -519,31 +519,46 @@ export default class GameScreen extends React.Component {
 
     transferTroops(troopNumber){
 
-        if(this.measureDist(this.game.regions[Number(this.state.workingRegionIndex)].lat, this.game.regions[Number(this.state.workingRegionIndex)].lon,
-            this.state.playerMarkers[0].coordinate.latitude, this.state.playerMarkers[0].coordinate.longitude) < this.game.regions[Number(this.state.workingRegionIndex)].radius
-            && this.game.regions[Number(this.state.workingRegionIndex)].owner === this.state.userID){
+        let distance = this.measureDist(
+          this.game.regions[Number(this.state.workingRegionIndex)].lat,
+          this.game.regions[Number(this.state.workingRegionIndex)].lon,
+          this.state.playerMarkers[0].coordinate.latitude,
+          this.state.playerMarkers[0].coordinate.longitude);
 
-            console.log("Had this number of troops when attempting to transfer: " + this.state.userTroops);
-            if(troopNumber > 0){
-                console.log("Attempted to send to base: " + troopNumber);
-            }else{
-                console.log("Attempted to receive from base: " + troopNumber);
+        let inRange = distance < this.game.regions[Number(this.state.workingRegionIndex)].radius;
+
+        // user is in range of region
+        if (inRange){
+
+            // this user owns the region
+            if (this.game.regions[Number(this.state.workingRegionIndex)].owner === this.state.userID) {
+                console.log("Had this number of troops when attempting to transfer: " + this.state.userTroops);
+                if(troopNumber > 0){
+                    console.log("Attempted to send to base: " + troopNumber);
+                }else{
+                    console.log("Attempted to receive from base: " + troopNumber);
+                }
+                let prev = Number(this.game.regions[Number(this.state.workingRegionIndex)].troops);
+
+                this.game.transferTroopsToBase(this.state.userID, this.state.workingRegionIndex, troopNumber, this.state.gameID)
+                    .then(response => {
+                        console.log("Base now has: " + response.regions[Number(this.state.workingRegionIndex)].troops);
+                        let change = Number(response.regions[Number(this.state.workingRegionIndex)].troops) - prev;
+                        console.log("This means the change was" + change )
+                    })
+                    .catch(error => {
+                        console.log("transferTroops error: " + error);
+                        alert("Transfer Troops Failed");
+                    })
             }
-            let prev = Number(this.game.regions[Number(this.state.workingRegionIndex)].troops);
-
-            this.game.transferTroopsToBase(this.state.userID, this.state.workingRegionIndex, troopNumber, this.state.gameID)
-                .then(response => {
-                    console.log("Base now has: " + response.regions[Number(this.state.workingRegionIndex)].troops);
-                    let change = Number(response.regions[Number(this.state.workingRegionIndex)].troops) - prev;
-                    console.log("This means the change was" + change )
-                })
-                .catch(error => {
-                    console.log("transferTroops error: " + error);
-                    alert("Transfer Troops Failed");
-                })
+            // user doesn't own the region
+            else {
+                alert('transferTroops error: user does not own the region');
+            }
         }
+        // user is not in range of region
         else {
-            alert("Transfer Troops Failed");
+            alert("transferTroops error: user is not in range of the region");
         }
     }
 
