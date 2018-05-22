@@ -152,8 +152,8 @@ function createCircularRegions(centerLat, centerLon, minRadius=5, maxRadius=20,
  * @throws {Error} if invalid regionType is given
  */
 function createEvenlyDistributedRegions(
-    centerLat, centerLon, radius=7, owner=null,
-    regionType="fort", numberOfRegions=5, mainBoundaryLimit=20) {
+    centerLat, centerLon, radius=GameConfig.captureZoneRadius, owner=null,
+    regionType="fort", numberOfRegions=5, mainBoundaryLimit=GameConfig.captureZoneDistance) {
 
   // validate regionType
   if (!GameConfig.regionTypes.hasOwnProperty(regionType)) {

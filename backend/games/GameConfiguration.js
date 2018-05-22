@@ -17,6 +17,17 @@ const config = {
   gameLoopPeriod: 5,
 
   /**
+   * Radius of each circular capture zone
+   */
+  captureZoneRadius: 11,
+
+  /**
+   * The distance between the host init coords and the center of each capture
+   * zone.
+   */
+  captureZoneDistance: 6,
+
+  /**
    * The amount of points awarded for each capture zone owned
    */
   pointsPerCaptureZone: 1,
