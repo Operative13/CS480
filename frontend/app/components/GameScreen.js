@@ -67,8 +67,8 @@ export default class GameScreen extends React.Component {
             this.state.region = {
                 latitude: params.lat,
                 longitude: params.lon,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
+                latitudeDelta: 0.001,
+                longitudeDelta: 0.001,
             };
         }
 
@@ -97,7 +97,6 @@ export default class GameScreen extends React.Component {
         this.game.listenForRegionChange(this.updateNodes);
 
         console.log("gameID: " + this.state.gameID);
-        console.log("userID: " + this.state.userID);
     }
 
     calcTimeLeft = (startTime) => {
@@ -276,6 +275,14 @@ export default class GameScreen extends React.Component {
         let nodes=[];
         let index = 0;
 
+        if(response.troops){
+            for(let user in response.troops){
+                if(user === this.state.userID){
+                    this.setState({userTroops: response.troops[user]});
+                }
+            }
+        }
+
         //console.log("updateNodes: " + JSON.stringify(regions));
         //console.log(this.game.regions)
         for(let item in response.regions){
@@ -390,7 +397,7 @@ export default class GameScreen extends React.Component {
                                         style={troopModalStyles.btn}
                                         onPress={()=> {
                                             this.transferTroops(this.state.troopTransferNumber);
-                                            this.toggleModal();
+                                            this.toggleModalOff();
                                         }}
                                     >
                                         <Text>Send Troops</Text>
@@ -404,7 +411,7 @@ export default class GameScreen extends React.Component {
                                         style={troopModalStyles.btn}
                                         onPress={()=> {
                                             this.transferTroops(-this.state.troopTransferNumber);
-                                            this.toggleModal();
+                                            this.toggleModalOff();
                                         }}
                                     >
                                         <Text>Receive Troops</Text>
@@ -412,7 +419,7 @@ export default class GameScreen extends React.Component {
 
                                     <TouchableOpacity
                                         style={troopModalStyles.btn}
-                                        onPress={() => this.toggleModal()}
+                                        onPress={() => this.toggleModalOff()}
                                     >
                                         <Text>Exit Menu</Text>
                                     </TouchableOpacity>
@@ -499,10 +506,25 @@ export default class GameScreen extends React.Component {
         this.setState({ region });
     }
 
-    toggleModal(){
-        this.setState({troopModalVisible: !this.state.troopModalVisible, troopTransferNumber: null, workingRegionIndex: null});
+    /**
+     * ->set the troop menu Modal ON
+     */
+    toggleModalOn(){
+        this.setState({troopModalVisible: true});
     }
 
+    /**
+     * ->set the troop menu Modal off, including setting additional variables to null
+     */
+    toggleModalOff(){
+        this.setState({troopModalVisible: false, troopTransferNumber: null, workingRegionIndex: null});
+    }
+
+    /**
+     * ->on press function for a React Native Marker that represents a region
+     * ->checks for range and ownership before opening a troop transfer menu that is a Modal
+     * @param regionIndex - unique key of a region that will be set as a state to be using in the transfer of troops
+     */
     onBuildingPress(regionIndex){
         //console.log("on press works, region index: " + regionIndex);
 
@@ -513,10 +535,15 @@ export default class GameScreen extends React.Component {
             && this.game.regions[regionIndex].owner === this.state.userID){
             //open drawer
             this.setState({workingRegionIndex: regionIndex});
-            this.toggleModal();
+            this.toggleModalOn();
         }
     }
 
+    /**
+     * -> use the sdk to transfer troops to or from a region
+     * -> checks for range and ownership
+     * @param troopNumber {int} - integer value passed by input form/button combo from troop modal, positive = send , negative = receive
+     */
     transferTroops(troopNumber){
 
         let distance = this.measureDist(
@@ -532,7 +559,7 @@ export default class GameScreen extends React.Component {
 
             // this user owns the region
             if (this.game.regions[Number(this.state.workingRegionIndex)].owner === this.state.userID) {
-                console.log("Had this number of troops when attempting to transfer: " + this.state.userTroops);
+                console.log("User troops: " + this.state.userTroops);
                 if(troopNumber > 0){
                     console.log("Attempted to send to base: " + troopNumber);
                 }else{
@@ -543,8 +570,6 @@ export default class GameScreen extends React.Component {
                 this.game.transferTroopsToBase(this.state.userID, this.state.workingRegionIndex, troopNumber, this.state.gameID)
                     .then(response => {
                         console.log("Base now has: " + response.regions[Number(this.state.workingRegionIndex)].troops);
-                        let change = Number(response.regions[Number(this.state.workingRegionIndex)].troops) - prev;
-                        console.log("This means the change was" + change )
                     })
                     .catch(error => {
                         console.log("transferTroops error: " + error);
