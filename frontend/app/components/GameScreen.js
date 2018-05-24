@@ -94,17 +94,17 @@ export default class GameScreen extends React.Component {
         this.updateGeolocation();
         let timer = setInterval(this.updateGeolocation, this.geolocationUpdatePeriod);
         this.setState({timer});
-        this.game.listenForRegionChange(this.updateNodes);
+        this.game.listenForRegionChange(this.updateNodes, this.updateOnNetworkFail);
 
         console.log("gameID: " + this.state.gameID);
     }
 
-    calcTimeLeft = (startTime) => {
-        let startDate = new Date(startTime);
-        let timeElapsed = (Date.now() - startDate)/1000;
-        let timeLeft = 600 - timeElapsed;
-        console.log("TIME LEFT: " + timeLeft)
-        return timeLeft
+    updateOnNetworkFail = () => {
+        this.game.getGame(this.state.gameID)
+            .then((response) =>{
+                console.log("Network Failed for the websocket, calling getGame");
+                this.updateNodes(response);
+        })
     }
 
     _loadInitialState = async () => {
@@ -496,6 +496,19 @@ export default class GameScreen extends React.Component {
             );
         }
     }
+
+    /**
+     * ->function to calculate time left in the game
+     * @param startTime - formatted time passed by clock
+     * @returns {number} - time in seconds to initialize the clock component
+     */
+    calcTimeLeft = (startTime) => {
+        let startDate = new Date(startTime);
+        let timeElapsed = (Date.now() - startDate)/1000;
+        let timeLeft = 600 - timeElapsed;
+        console.log("TIME LEFT: " + timeLeft)
+        return timeLeft
+    };
 
     /**
      * ->update MapView region
