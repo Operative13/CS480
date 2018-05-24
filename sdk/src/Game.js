@@ -305,7 +305,8 @@ module.exports = class Game {
   listenForRegionChange(
     callback,
     onError=(data) => console.error(data),
-    onClose=(event) => console.log(`code: ${event.code}; reason: ${event.reason}`)) {
+    onClose=(event) => console.log(`[Game.listenForRegionChange] 
+      websocket closed: code: ${event.code}; reason: ${event.reason}`)) {
 
     if (!this.id) {
       throw new Error('game id has not been defined within the game object');
