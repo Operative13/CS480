@@ -94,7 +94,7 @@ export default class GameScreen extends React.Component {
         this.updateGeolocation();
         let timer = setInterval(this.updateGeolocation, this.geolocationUpdatePeriod);
         this.setState({timer});
-        this.game.listenForRegionChange(this.updateNodes, this.updateOnNetworkFail);
+        this.game.listenForRegionChange(this.updateNodes, onError = () => this.updateOnNetworkFail);
 
         console.log("gameID: " + this.state.gameID);
     }
