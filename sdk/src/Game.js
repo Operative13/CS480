@@ -301,12 +301,14 @@ module.exports = class Game {
    * @param onClose {function} - func should take 1 argument, event itself.
    * Defaults to printing reason and
    *  stderr.
+   * @param onOpen {function} - takes 1 arg, event
    */
   listenForRegionChange(
     callback,
-    onError=(data) => console.error(data),
+    onError=(data) => console.log(`[Game.listenForRegionChange] onError: ${data}`),
     onClose=(event) => console.log(`[Game.listenForRegionChange] 
-      websocket closed: code: ${event.code}; reason: ${event.reason}`)) {
+      websocket closed: code: ${event.code}; reason: ${event.reason}`),
+    onOpen=(event) => console.log(`[Game.listenForRegionChange] onOpen: ${event.data}`)) {
 
     if (!this.id) {
       throw new Error('game id has not been defined within the game object');
@@ -314,6 +316,10 @@ module.exports = class Game {
 
     let uri = `ws://${this._domain}:${this._port}/api/games/${this.id}/regions`;
     let socket = new this.WebSocket(uri);
+
+    socket.onopen = (event) => {
+      onOpen(event);
+    };
 
     socket.onmessage = (event) => {
       let data = event.data;

@@ -230,7 +230,7 @@ describe('john moves directly on top of a capture region', () => {
         //     console.log(json);
         //     assert(json.regions[0].owner === userJohn.id, 'john is owner');
         //   })
-          .catch(err => err)
+        //   .catch(err => err)
       })
       .catch(err => {
         throw new Error(err.message || err.data);

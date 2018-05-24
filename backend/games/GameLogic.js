@@ -389,6 +389,7 @@ function startGameTimer(gameId) {
       game.startTime = new Date();
       game.save().catch(err => reject(err));
 
+      // after the game is over, end the game if it still exists
       setTimeout(
         () => {
           endGame(gameId)
