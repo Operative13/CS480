@@ -45,7 +45,7 @@ const config = {
   /**
    * The amount of troops that die trying to take over a base every tick/loop
    */
-  troopsAttackingPerCaptureLoop: 1,
+  troopsAttackingPerCaptureLoop: 3,
 
   /**
    * Time between troops fighting & dying for ownership of a base.

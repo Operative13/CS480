@@ -8,7 +8,7 @@ const { app } = require('./app');
 let trim = (value) => value.trim();
 
 program
-  .version('0.0.0')
+  .version('0.3.0')
   .option('-h, --host <host>', trim)
   .option('-p, --port <port>', trim)
   .option('-u, --mongodb-uri <uri>', trim)
