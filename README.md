@@ -31,4 +31,4 @@ that work together:
 
 ---
 
-[complete build and deploy instructions]()
+[complete build and deploy instructions](deliverables/DEPLOY.md)
